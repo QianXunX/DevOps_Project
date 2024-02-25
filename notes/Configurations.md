@@ -6,7 +6,9 @@
 ## First Time Setup Meadow
 Firstly to setup the meadow, you have to found the device port and configure the route to that port  
 `meadow port list`  
-`meadow config route <port>`
+`meadow config route <port>`  
+Or in case have only one port:  
+`meadow port select`
 
 To get device information about hardware and firmware  
 `meadow device info`
@@ -31,4 +33,7 @@ File > New > Project > Search by filter "Meadow" > F7 Feather App(C#)
 Double click on toolbar and select option to set Meadow Port on VS
 
 ### Deployment
-You can use deployment option for running code in Meadow through VS 
+You can use deployment option for running code in Meadow through VS, and it will make a compiling and deployment on the meadow board. 
+
+You can stop the deployment with the command:  
+`meadow runtime disable`
