@@ -1,1 +1,5 @@
+.git
+.vs
 TemperatureWarriorCode/.vs/
+TemperatureWarriorCode/bin/
+TemperatureWarriorCode/obj/
