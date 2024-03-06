@@ -69,16 +69,18 @@ namespace TemperatureWarriorCode {
 
                 //string IPAddress = wifi.IpAddress.ToString();
 
-                ////Connnect to the WiFi network.
-                //Console.WriteLine($"IP Address: {IPAddress}");
-                //Data.IP = IPAddress;
-                //if (!string.IsNullOrWhiteSpace(IPAddress)) {
-                //    Data.IP = IPAddress;
-                //    WebServer webServer = new WebServer(wifi.IpAddress, Data.Port);
-                //    if (webServer != null) {
-                //        webServer.Start();
-                //    }
-                //}
+                // Connnect to the WiFi network.
+                /*
+                Console.WriteLine($"IP Address: {IPAddress}");
+                Data.IP = IPAddress;
+                if (!string.IsNullOrWhiteSpace(IPAddress)) {
+                    Data.IP = IPAddress;
+                    WebServer webServer = new WebServer(wifi.IpAddress, Data.Port);
+                    if (webServer != null) {
+                        webServer.Start();  // After the start, it will be running in the background
+                    }
+                }
+                */
 
                 // TODO Display initialization (uncomment when needed)
                 //Display();
@@ -134,8 +136,12 @@ namespace TemperatureWarriorCode {
 
             //THE TW START WORKING
             while (Data.is_working) {
+                // PUT HERE THE CODE TO CONTROL THE HEATER AND COOLER
 
                 //This is the time refresh we did not do before
+                // We are sleeping the time we need to sleep to make the refresh time be the same as the one we want
+                // We need to update sleep_time to adjust it to the time that our code takes to run, so that timeController.RegisterTemperature
+                // is called at EXACTLY thetime we are told to do so
                 Thread.Sleep(Data.refresh - sleep_time);
 
                 //Temperature registration
