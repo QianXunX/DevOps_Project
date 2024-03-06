@@ -32,17 +32,20 @@ namespace TemperatureWarriorCode {
 
         public int count = 0;
 
+        // Entry point of the application
         public override async Task Run() {
             if (count == 0) {
                 Console.WriteLine("Initialization...");
 
                 // TODO uncomment when needed 
                 // Temperature Sensor Configuration
-                //sensor = new AnalogTemperature(analogPin: Device.Pins.A01, sensorType: AnalogTemperature.KnownSensorType.TMP36);
-                //sensor.TemperatureUpdated += AnalogTemperatureUpdated;
-                //sensor.StartUpdating(TimeSpan.FromSeconds(2));
+                sensor = new AnalogTemperature(analogPin: Device.Pins.A01, sensorType: AnalogTemperature.KnownSensorType.TMP36);
+                // sensor.Temperature.Value.Celsius // To do it this way we would need to create a new thread to update the temperature (we are not doing it this way)
+                sensor.TemperatureUpdated += AnalogTemperatureUpdated;  // This way we are updating the temperature in the main thread by using a callback
+                sensor.StartUpdating(TimeSpan.FromSeconds(2));  // We are updating the temperature every 2 seconds (Change this value if needed)
+                // Note: DHT22 sensor only updates every 2 seconds, so there is no need to update it more frequently if it is used
 
-                // TODO Display Configuration (uncomment when needed)
+                // TODO Display Configuration (uncomment when needed) (WE DO NOT NEED THE DISPLAY)
                 //var config = new SpiClockConfiguration(new Frequency(48000, Frequency.UnitType.Kilohertz), SpiClockConfiguration.Mode.Mode3);
                 //var spiBus = Device.CreateSpiBus(Device.Pins.SCK, Device.Pins.COPI, Device.Pins.CIPO, config);
                 //display = new St7789(
@@ -171,28 +174,9 @@ namespace TemperatureWarriorCode {
 
         //Temperature and Display Updated
         void AnalogTemperatureUpdated(object sender, IChangeResult<Meadow.Units.Temperature> e) {
-
-            // TODO: Uncomment when needed
-            ////Update Display with new temperature
-            //graphics.DrawRectangle(
-            //    x: 48, y: 160,
-            //    width: 144,
-            //    height: 40,
-            //    color: Data.colors[Data.colors.Length - 1],
-            //    filled: true);
-
-            //graphics.DrawText(
-            //    x: 48, y: 160,
-            //    text: $"{e.New.Celsius:00.0}°C",
-            //    color: Color.White,
-            //    scaleFactor: ScaleFactor.X2);
-
-            //graphics.Show();
-            //Update Display with new temperature
-
+            // We can filter the high frequency changes on the temperature (DO THIS SPECIALLY FOR THE BAD SENSOR)
             Data.temp_act = Math.Round((Double)e.New.Celsius, 2).ToString();
-
-            //Console.WriteLine($"Temperature={Data.temp_act}");
+            Console.WriteLine($"Temperature={Data.temp_act}");
         }
 
         void WiFiAdapter_WiFiConnected(object sender, EventArgs e) {
