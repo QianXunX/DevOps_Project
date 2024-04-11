@@ -46,9 +46,63 @@ namespace TemperatureWarriorCode
         {
             pwm.DutyCycle = 0f;
         }
-        // NOTE: a duty cycle of 0 appears to output the maximum voltage to the pin (4.4V)
+        // NOTE: the fan relay works with a control signal of 5V, but the digital output only outputs 3.3V
+        // We fix it using a PWM signal:
+        // A duty cycle of 0 appears to output the maximum voltage to the pin (4.4V) which is enough to control the relay
         // A duty cycle of 1 appears to output 3.3V to the pin
         // A duty cycle of 0.1 appears to output 0.35V to the pin
+    }
+
+    public class HeatGun
+    {
+        // Heat Gun pin
+        public IDigitalOutputPort pin;
+
+        // Constructor
+        public HeatGun(F7FeatherV2 device, IPin pin)
+        {
+            this.pin = device.CreateDigitalOutputPort(pin: pin, initialState: false);
+            Console.WriteLine("Heat Gun initialized");
+        }
+
+        // Methods
+        public void TurnOn()
+        {
+            pin.State = true;
+        }
+
+        public void TurnOff()
+        {
+            pin.State = false;
+        }
+        // NOTE: the heat gun relay works with a control signal of at least 3V,
+        // so the digital output (3.3V) is enough
+    }
+
+    public class Peltier
+    {
+        // Heat Gun pin
+        public IDigitalOutputPort pin;
+
+        // Constructor
+        public Peltier(F7FeatherV2 device, IPin pin)
+        {
+            this.pin = device.CreateDigitalOutputPort(pin: pin, initialState: false);
+            Console.WriteLine("Peltier initialized");
+        }
+
+        // Methods
+        public void TurnOn()
+        {
+            pin.State = true;
+        }
+
+        public void TurnOff()
+        {
+            pin.State = false;
+        }
+        // NOTE: the peltier relay works with a control signal of at least 3V,
+        // so the digital output (3.3V) is enough
     }
 
 
@@ -72,6 +126,10 @@ namespace TemperatureWarriorCode
 
         //Fan
         static Fan fan;
+        //Heat Gun
+        static HeatGun heatGun;
+        //Peltier
+        static Peltier peltier;
 
 
         public override async Task Run()
@@ -84,6 +142,12 @@ namespace TemperatureWarriorCode
 
                 // Create the fan passing the Device and the pin
                 fan = new Fan(Device, Device.Pins.D02);
+
+                // Create the heat gun passing the Device and the pin
+                heatGun = new HeatGun(Device, Device.Pins.D15);
+
+                // Create the peltier passing the Device and the pin
+                Peltier peltier = new Peltier(Device, Device.Pins.D14);
 
                 // Temperature Sensor Configuration
                 sensor = new AnalogTemperature(analogPin: Device.Pins.A01, sensorType: AnalogTemperature.KnownSensorType.TMP36);
@@ -124,6 +188,36 @@ namespace TemperatureWarriorCode
                 count++;
             }
 
+            ////////////////////////////////////////// DEVICE TESTING //////////////////////////////////////////
+
+            //////////////////// TESTING PELTIER ////////////////////
+            while (true)
+            {
+                // Turn on the peltier
+                Console.WriteLine("Turning on the peltier");
+                peltier.TurnOn();
+                Thread.Sleep(2000);
+                // Turn off the peltier
+                Console.WriteLine("Turning off the peltier");
+                peltier.TurnOff();
+                Thread.Sleep(2000);
+            }
+            //////////////// END OF TESTING PELTIER /////////////////
+
+            //////////////////// TESTING HEAT GUN ///////////////////
+            while (true)
+            {
+                // Turn on the heat gun
+                Console.WriteLine("Turning on the heat gun");
+                heatGun.TurnOn();
+                Thread.Sleep(5000);
+                // Turn off the heat gun
+                Console.WriteLine("Turning off the heat gun");
+                heatGun.TurnOff();
+                Thread.Sleep(5000);
+            }
+            //////////////// END OF TESTING HEAT GUN ////////////////
+
             ////////////////////// TESTING FAN //////////////////////
             while (true)
             {
@@ -137,7 +231,10 @@ namespace TemperatureWarriorCode
                 Thread.Sleep(5000);
             }
             /////////////////// END OF TESTING FAN //////////////////
+
+            ////////////////////////////////////// END OF DEVICE TESTING ///////////////////////////////////////
         }
+
 
         //TW Combat Round
         public static void StartRound()
