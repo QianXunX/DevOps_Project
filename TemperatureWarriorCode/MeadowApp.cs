@@ -19,6 +19,7 @@ using TemperatureWarriorCode.Web;
 using NETDuinoWar;
 using Meadow.Gateways.Bluetooth;
 
+using PidAlgo;
 
 namespace TemperatureWarriorCode
 {
@@ -131,7 +132,6 @@ namespace TemperatureWarriorCode
         //Peltier
         static Peltier peltier;
 
-
         public override async Task Run()
         {
             if (count == 0)
@@ -238,8 +238,11 @@ namespace TemperatureWarriorCode
 
         //TW Combat Round
         public static void StartRound()
-        {
-
+        {   
+            // Initialize peltier and heatgun
+            Peltier peltier = new Peltier(Device, Device.Pins.D14);
+            HeatGun heatGun = new HeatGun(Device, Device.Pins.D15);
+            PidAlgo.PIDController pid = new PidAlgo.PIDController(1, 1, 1);
             Stopwatch timer = Stopwatch.StartNew();
             timer.Start();
 
@@ -262,6 +265,7 @@ namespace TemperatureWarriorCode
             for (int i = 0; i < Data.temp_min.Length; i++)
             {
                 Console.WriteLine(Data.temp_max[i]);
+                // Save all ranges to temperature Ranges
                 temperatureRanges[i] = new TemperatureRange(double.Parse(Data.temp_min[i]), double.Parse(Data.temp_max[i]), int.Parse(Data.round_time[i]) * 1000);
                 total_time += int.Parse(Data.round_time[i]);
             }
@@ -284,8 +288,29 @@ namespace TemperatureWarriorCode
             //THE TW (Temperature Warrior) START WORKING
             while (Data.is_working)
             {
-                // Turn on the fan
-                fan.TurnOn();
+                
+                // Get Set Point from time controller CHEQUEAR PORQUE NO SE SABE QUE ES TIMECONTROLLER ************************************************************
+                double setPoint = timeController.GetSetPoint();
+
+                // Get Temperature from sensor
+                double currentTemp = double.Parse(Data.temp_act); 
+
+                // Calculate pid output
+                double pidOutput = pidController.Update(setPoint, currentTemp);
+
+                if (output > 0.5) {
+                    // Turn off peltier and turn on heat gun
+                    TurnPeltierOff();
+                    TurnHeatGunOn();
+                } else if (output < -0.5) {
+                    // Turn off heat gun and turn on peltier
+                    TurnPeltierOn();
+                    TurnHeatGunOff();
+                } else {
+                    // Turn off peltier and heat gun
+                    TurnPeltierOff();
+                    TurnHeatGunOff();
+                }
 
                 //This is the time refresh we did not do before
                 Thread.Sleep(Data.refresh - sleep_time);
@@ -298,7 +323,8 @@ namespace TemperatureWarriorCode
             }
             // END OF THE ROUND
             // Turn off the fan
-            fan.TurnOff();
+            TurnHeatGunOff();
+            TurnPeltierOff();
             Console.WriteLine("Round Finish");
             t.Abort();
 
