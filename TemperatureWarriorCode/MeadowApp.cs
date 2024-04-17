@@ -288,30 +288,37 @@ namespace TemperatureWarriorCode
             //THE TW (Temperature Warrior) START WORKING
             while (Data.is_working)
             {
-                
-                // Get Set Point from time controller CHEQUEAR PORQUE NO SE SABE QUE ES TIMECONTROLLER ************************************************************
-                double setPoint = timeController.GetSetPoint();
+                for (int i = 0; i < temperatureRanges.Length; i++){
+                    // Setpoint calculation
+                    double setPoint = temperatureRanges[i].MaxTemp + temperatureRanges[i].MinTemp / 2;
+                    Stopwatch roundTimer = Stopwatch.StartNew(); // Temporizador para la ronda actual
+                    while (roundTimer.ElapsedMilliseconds < temperatureRanges[i].RangeTimeInMilliseconds)
+                    {
+                        // LEER DEL SENSOR
+                        double currentTemp = 0; 
 
-                // Get Temperature from sensor
-                double currentTemp = double.Parse(Data.temp_act); 
-
-                // Calculate pid output
-                double pidOutput = pidController.Update(setPoint, currentTemp);
-
-                if (output > 0.5) {
-                    // Turn off peltier and turn on heat gun
-                    TurnPeltierOff();
-                    TurnHeatGunOn();
-                } else if (output < -0.5) {
-                    // Turn off heat gun and turn on peltier
-                    TurnPeltierOn();
-                    TurnHeatGunOff();
-                } else {
-                    // Turn off peltier and heat gun
-                    TurnPeltierOff();
-                    TurnHeatGunOff();
+                        // Calculate pid output
+                        double pidOutput = pid.Update(currentTemp, setPoint);
+                        if (pidOutput > 0.5) {
+                            // Turn off peltier and turn on heat gun
+                            peltier.TurnOff();
+                            heatGun.TurnOn();
+                        } else if (pidOutput < -0.5) {
+                            // Turn off heat gun and turn on peltier
+                            peltier.TurnOn();
+                            heatGun.TurnOff();
+                        } else {
+                            // Turn off peltier and heat gun
+                            peltier.TurnOff();
+                            heatGun.TurnOff();
+                        }
+                        // PUNTO X
+                        Thread.Sleep(Data.refresh - sleep_time);
+                    }
                 }
 
+                // SOSPECHO PONER TODO LO DE ABAJO EN PUNTO X
+                // PARA QUE SIRVE ESTO
                 //This is the time refresh we did not do before
                 Thread.Sleep(Data.refresh - sleep_time);
 
@@ -323,8 +330,8 @@ namespace TemperatureWarriorCode
             }
             // END OF THE ROUND
             // Turn off the fan
-            TurnHeatGunOff();
-            TurnPeltierOff();
+            peltier.TurnOff();
+            heatGun.TurnOff();
             Console.WriteLine("Round Finish");
             t.Abort();
 
