@@ -320,7 +320,7 @@ namespace TemperatureWarriorCode
                 // SOSPECHO PONER TODO LO DE ABAJO EN PUNTO X
                 // PARA QUE SIRVE ESTO
                 //This is the time refresh we did not do before
-                Thread.Sleep(Data.refresh - sleep_time);
+                //Thread.Sleep(Data.refresh - sleep_time);
 
                 //Temperature registration
                 Console.WriteLine($"RegTempTimer={regTempTimer.Elapsed.ToString()}, enviando Temp={Data.temp_act}");
