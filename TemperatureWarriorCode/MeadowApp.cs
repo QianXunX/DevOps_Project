@@ -242,6 +242,7 @@ namespace TemperatureWarriorCode
             // Initialize peltier and heatgun
             Peltier peltier = new Peltier(Device, Device.Pins.D14);
             HeatGun heatGun = new HeatGun(Device, Device.Pins.D15);
+            Fan fan = new Fan(Device, Device.Pins.D02);
             PidAlgo.PIDController pid = new PidAlgo.PIDController(1, 1, 1);
             Stopwatch timer = Stopwatch.StartNew();
             timer.Start();
@@ -298,7 +299,7 @@ namespace TemperatureWarriorCode
                         double currentTemp = 0; 
 
                         // Calculate pid output
-                        double pidOutput = pid.Update(currentTemp, setPoint);
+                        double pidOutput = pid.Update(Data.temp_act, setPoint);
                         if (pidOutput > 0.5) {
                             // Turn off peltier and turn on heat gun
                             peltier.TurnOff();
