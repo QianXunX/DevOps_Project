@@ -235,6 +235,21 @@ namespace TemperatureWarriorCode
             ////////////////////////////////////// END OF DEVICE TESTING ///////////////////////////////////////
         }
 
+        //////////////////////// PREPARE /////////////////////////
+        /*
+        
+        Prepare(int.Parse(Data.temp_min[0]), Data.temp_max[0], Data.display_refresh, int.Parse(Data.round_time[0]));
+
+        static void Prepare(string temp_min, string temp_max, int display_refresh, int round_time)
+        {
+            while (!pressed)
+            {
+                Thread.Sleep(display_refresh); // Esperar según el intervalo de actualización de pantalla
+            }
+            Combat(temp_min, temp_max, display_refresh, round_time);
+        }
+        */
+
 
         //TW Combat Round
         public static void StartRound()
