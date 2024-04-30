@@ -131,9 +131,9 @@ namespace TemperatureWarriorCode
         static HeatGun heatGun;
         //Peltier
         static Peltier peltier;
-
-        //Config validate variables
+        //Config variables
         public bool okay = false;
+
 
         public override async Task Run()
         {
@@ -190,7 +190,7 @@ namespace TemperatureWarriorCode
 
                 count++;
             }
-            /*TESTING HW
+            /*TESTING HW            /*TESTING HW
             ////////////////////////////////////////// DEVICE TESTING //////////////////////////////////////////
 
             //////////////////// TESTING PELTIER ////////////////////
