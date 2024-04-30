@@ -187,7 +187,7 @@ namespace TemperatureWarriorCode
 
                 count++;
             }
-
+            /*TESTING HW
             ////////////////////////////////////////// DEVICE TESTING //////////////////////////////////////////
 
             //////////////////// TESTING PELTIER ////////////////////
@@ -233,6 +233,8 @@ namespace TemperatureWarriorCode
             /////////////////// END OF TESTING FAN //////////////////
 
             ////////////////////////////////////// END OF DEVICE TESTING ///////////////////////////////////////
+            */
+            StartRound();
         }
 
 
