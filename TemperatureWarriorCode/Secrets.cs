@@ -2,9 +2,9 @@
     internal class Secrets {
 
         //WiFi NAME 
-        public const string WIFI_NAME = "SSID_NAME";
+        public const string WIFI_NAME = "syjun";
 
         //PASSWORD FOR THE WiFi NAME
-        public const string WIFI_PASSWORD = "pwd";
+        public const string WIFI_PASSWORD = "12341234";
     }
 }

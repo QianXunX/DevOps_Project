@@ -144,13 +144,13 @@ namespace TemperatureWarriorCode
                 // TODO uncomment when needed
 
                 // Create the fan passing the Device and the pin
-                fan = new Fan(Device, Device.Pins.D02);
+                // fan = new Fan(Device, Device.Pins.D02);
 
                 // Create the heat gun passing the Device and the pin
-                heatGun = new HeatGun(Device, Device.Pins.D15);
+                // heatGun = new HeatGun(Device, Device.Pins.D15);
 
                 // Create the peltier passing the Device and the pin
-                Peltier peltier = new Peltier(Device, Device.Pins.D14);
+                // Peltier peltier = new Peltier(Device, Device.Pins.D14);
 
                 // Temperature Sensor Configuration
                 sensor = new AnalogTemperature(analogPin: Device.Pins.A01, sensorType: AnalogTemperature.KnownSensorType.TMP36);
