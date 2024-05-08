@@ -135,9 +135,6 @@ namespace TemperatureWarriorCode
         //Config variables
         public bool okay = false;
 
-        //Config variables
-        public bool okay = false;
-
         public override async Task Run()
         {
             if (count == 0)
@@ -281,60 +278,12 @@ namespace TemperatureWarriorCode
             return true;
         }
 
-       public void config() 
+        public void config() 
         {
             while (!okay) 
             {
                 okay = validateParams(Data.temp_min, Data.temp_max, Data.display_refresh, Data.round_time);
 
-            }
-            //prepare(Data.temp_min, Data.temp_max, Data.display_refresh, Data.round_time);
-        }
-
-        public bool validateParams(string[] temp_min, string[] temp_max, int display_refresh, string[] round_time)
-        {
-            // Comprobar que las listas no son nulas
-            if (temp_min == null || temp_max == null || round_time == null) { return false; }
-
-            // Comprobar que las listas tengan la misma longitud
-            if (temp_min.Length != temp_max.Length || temp_min.Length != round_time.Length) { return false; }
-
-            // Comprobar que display_refresh sea mayor que 0
-            if (display_refresh <= 0) { return false; }
-
-            // Convertir los valores de las listas de string a double y comprobar que se puedan convertir correctamente
-            foreach (var str in temp_min)
-            {
-                if (!double.TryParse(str, out double result))
-                    return false;
-            }
-
-            foreach (var str in temp_max)
-            {
-                if (!double.TryParse(str, out double result))
-                    return false;
-            }
-
-            // Convertir las listas de string a double
-            var tempMinDouble = Array.ConvertAll(temp_min, double.Parse);
-            var tempMaxDouble = Array.ConvertAll(temp_max, double.Parse);
-
-            // Comprobar que las temperaturas máximas sean menores que 30
-            foreach (var temp in tempMaxDouble)
-            {
-                if (temp >= 30)
-                    return false;
-            }
-
-            return true;
-        }
-    
-       public void config() 
-        {
-            while (!okay) 
-            {
-                okay = validateParams(Data.temp_min, Data.temp_max, Data.display_refresh, Data.round_time);
-                
             }
             //prepare(Data.temp_min, Data.temp_max, Data.display_refresh, Data.round_time);
         }

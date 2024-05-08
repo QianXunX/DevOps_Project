@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Threading;
+using System.Text.Json;
 
 namespace TemperatureWarriorCode.Web {
     public class WebServer {
@@ -74,6 +75,31 @@ namespace TemperatureWarriorCode.Web {
             _runServer = false;
         }
 
+        public static bool tempCheck(string[] data, bool tipo)
+        {
+            if (data != null)
+            {
+                for (int i = 0; i < data.Length; i++)
+                {
+                    if (tipo)
+                    {
+                        if (!string.IsNullOrWhiteSpace(data[i].ToString()) && Double.Parse(data[i].ToString()) < 12)
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        if (!string.IsNullOrWhiteSpace(data[i].ToString()) && Double.Parse(data[i].ToString()) > 30)
+                        {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+            return true;
+        }
         private async Task HandleIncomingConnections() {
 
             await Task.Run(async () => {
@@ -95,6 +121,50 @@ namespace TemperatureWarriorCode.Web {
                     Console.WriteLine(req.UserAgent);
                     Console.WriteLine();
 
+                    // Endpoint para devolver el valor de display_refresh
+                    if (req.Url.AbsolutePath == "/display-refresh")
+                    {
+                        // Obtén el valor de Data.display_refresh
+                        int refreshInterval = Data.display_refresh;
+
+                        // Devuelve el valor como JSON
+                        string jsonResponse = JsonSerializer.Serialize(new
+                        {
+                            refresh = refreshInterval
+                        });
+
+                        byte[] responseBytes = Encoding.UTF8.GetBytes(jsonResponse);
+                        resp.ContentType = "application/json";
+                        resp.ContentEncoding = Encoding.UTF8;
+                        resp.ContentLength64 = responseBytes.Length;
+
+                        await resp.OutputStream.WriteAsync(responseBytes, 0, responseBytes.Length);
+                        resp.Close();
+                    }
+
+                    // Endpoint para devolver la temperatura actual
+                    if (req.Url.AbsolutePath == "/realtime-temp")
+                    {
+                        // Obtén el valor actual de la temperatura
+                        string tempActual = Data.temp_act;
+
+                        // Crea una respuesta JSON con la temperatura
+                        var jsonResponse = new
+                        {
+                            temp = tempActual
+                        };
+
+                        // Convierte a JSON usando `System.Text.Json`
+                        string jsonString = JsonSerializer.Serialize(jsonResponse);
+
+                        byte[] responseBytes = Encoding.UTF8.GetBytes(jsonString);
+                        resp.ContentType = "application/json";
+                        resp.ContentEncoding = Encoding.UTF8;
+                        resp.ContentLength64 = responseBytes.Length;
+
+                        await resp.OutputStream.WriteAsync(responseBytes, 0, responseBytes.Length);
+                        resp.Close();
+                    }
 
                     // If `shutdown` url requested w/ POST, then shutdown the server after serving the page
                     if (req.HttpMethod == "POST" && req.Url.AbsolutePath == "/shutdown") {
@@ -162,12 +232,12 @@ namespace TemperatureWarriorCode.Web {
                                             ready = true;
                                         }
                                         // Comprobar que las listas no son nulas
-                                        if (Data.temp_min == null  Data.temp_max == null  Data.round_time == null) {
+                                        if (Data.temp_min == null && Data.temp_max == null && Data.round_time == null) {
                                             message = "No se admiten parametros nulos."; 
                                         }
 
                                         // Comprobar que las listas tengan la misma longitud
-                                        if (Data.temp_min.Length != Data.temp_max.Length  Data.temp_min.Length != Data.round_time.Length) {
+                                        if (Data.temp_min.Length != Data.temp_max.Length && Data.temp_min.Length != Data.round_time.Length) {
                                             message = "Tiene que haber el mismo numero de argumentos en todos los parametros.";
                                         }
 
@@ -177,7 +247,7 @@ namespace TemperatureWarriorCode.Web {
                                             }
                                     }
                                     else {
-                                        message = "La contrase&ntilde;a es incorrecta.";
+                                        message = "La contrase&ntildeña es incorrecta.";
                                     }
                                 }
                             }
@@ -231,24 +301,6 @@ namespace TemperatureWarriorCode.Web {
             }
         }
 
-        public static bool tempCheck(string[] data, bool tipo) {
-            if (data != null) {
-                for (int i = 0; i < data.Length; i++) {
-                    if (tipo) {
-                        if (!string.IsNullOrWhiteSpace(data[i].ToString()) && Double.Parse(data[i].ToString()) < 12) {
-                            return false;
-                        }
-                    }
-                    else {
-                        if (!string.IsNullOrWhiteSpace(data[i].ToString()) && Double.Parse(data[i].ToString()) > 30) {
-                            return false;
-                        }
-                    }
-                }
-                return true;
-            }
-            return true;
-        }
 
         public static string writeHTML(string message) {
             // If we are already ready, disable all the inputs
@@ -271,11 +323,12 @@ namespace TemperatureWarriorCode.Web {
             if (Data.is_working) {
                 start = "";
             }
-            /*if (Data.csv_counter != 0) {
-                graph = "<canvas id='myChart' width='0' height='0'></canvas>";
+            /*
+            if (Data.csv_counter != 0) {
+                graph = "<canvas id='myChart' width='400' height='400'></canvas>";
                 message = "El tiempo que se ha mantenido en el rango de temperatura es de " + Data.time_in_range_temp.ToString() + " s.";
-            }*/
-
+            }
+            */
 
 
             //Write the HTML page
@@ -310,6 +363,51 @@ namespace TemperatureWarriorCode.Web {
                             "location.href = 'temp'" +
                             "}} " + 
                             "function start(){{location.href = 'start'}}" +
+                            "</script>" +
+
+
+                            // GRAFO
+                            // Configuración del gráfico y actualización en tiempo real
+                            "<script>" +
+                            "var ctx = document.getElementById('myChart').getContext('2d');" +
+                            "var myChart = new Chart(ctx, {" +
+                            "    type: 'line'," +
+                            "    data: {" +
+                            "        labels: []," +  // Etiquetas vacías al principio
+                            "        datasets: [{" +
+                            "            label: 'Temperatura Actual'," +
+                            "            data: []," +  // Datos vacíos al principio
+                            "            borderColor: 'rgba(75, 192, 192, 1)'," +
+                            "            fill: false" +
+                            "        }]" +
+                            "    }," +
+                            "    options: {" +
+                            "        responsive: true," +
+                            "        scales: {" +
+                            "            x: { title: { display: true, text: 'Hora' } }," +
+                            "            y: { title: { display: true, text: 'Temperatura (°C)' } }" +
+                            "        }" +
+                            "    }" +
+                            "});" +
+                            // Función para actualizar el gráfico
+                            "function updateTemperature(){" +
+                            "fetch('/realtime-temp')" +
+                            ".then(response => response.json())" +
+                            ".then(data => {" +
+                            "var currentTime = new Date().toLocaleTimeString();" +  // Hora actual como etiqueta
+                            "myChart.data.labels.push(currentTime);" +  // Añadir la hora actual
+                            "myChart.data.datasets[0].data.push(data.temp);" +  // Añadir la temperatura actual" +
+                            "if (myChart.data.labels.length > 10) {" +  // Limitar a los últimos 10 puntos
+                            "myChart.data.labels.shift();" +
+                            "myChart.data.datasets[0].data.shift();" +
+                            "}" +
+                            "myChart.update();" +
+                            "})" +
+                            ".catch(error => console.error(\"Error al obtener la temperatura:\", error));" +
+                            "}" +
+                            // Actualizar cada `Data.display_refresh` milisegundos
+                            "var interval = " + Data.display_refresh + ";" +
+                            "setInterval(updateTemperature, interval);" +
                             "</script>" +
 
                             "<div class='tm-main-content' id='top'>" +
