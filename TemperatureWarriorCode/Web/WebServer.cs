@@ -161,6 +161,20 @@ namespace TemperatureWarriorCode.Web {
                                             message = "Los par&aacute;metros se han cambiado satisfactoriamente. Todo preparado.";
                                             ready = true;
                                         }
+                                        // Comprobar que las listas no son nulas
+                                        if (Data.temp_min == null  Data.temp_max == null  Data.round_time == null) {
+                                            message = "No se admiten parametros nulos."; 
+                                        }
+
+                                        // Comprobar que las listas tengan la misma longitud
+                                        if (Data.temp_min.Length != Data.temp_max.Length  Data.temp_min.Length != Data.round_time.Length) {
+                                            message = "Tiene que haber el mismo numero de argumentos en todos los parametros.";
+                                        }
+
+                                        // Comprobar que display_refresh sea mayor que 0
+                                        if (Data.display_refresh <= 0) {
+                                            message = "El tiempo de refresco debe ser mayor que 0";
+                                            }
                                     }
                                     else {
                                         message = "La contrase&ntilde;a es incorrecta.";
