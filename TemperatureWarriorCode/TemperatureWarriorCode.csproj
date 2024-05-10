@@ -21,4 +21,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="personal\" />
+  </ItemGroup>
 </Project>

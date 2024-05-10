@@ -121,6 +121,7 @@ namespace TemperatureWarriorCode.Web {
                     Console.WriteLine(req.UserAgent);
                     Console.WriteLine();
 
+                    /*
                     // Endpoint para devolver el valor de display_refresh
                     if (req.Url.AbsolutePath == "/display-refresh")
                     {
@@ -141,7 +142,6 @@ namespace TemperatureWarriorCode.Web {
                         await resp.OutputStream.WriteAsync(responseBytes, 0, responseBytes.Length);
                         resp.Close();
                     }
-
                     // Endpoint para devolver la temperatura actual
                     if (req.Url.AbsolutePath == "/realtime-temp")
                     {
@@ -165,6 +165,7 @@ namespace TemperatureWarriorCode.Web {
                         await resp.OutputStream.WriteAsync(responseBytes, 0, responseBytes.Length);
                         resp.Close();
                     }
+                    */
 
                     // If `shutdown` url requested w/ POST, then shutdown the server after serving the page
                     if (req.HttpMethod == "POST" && req.Url.AbsolutePath == "/shutdown") {
@@ -226,14 +227,14 @@ namespace TemperatureWarriorCode.Web {
                                         if (!tempCheck(Data.temp_max, false) || !tempCheck(Data.temp_min, true)) {
                                             message = "El rango de temperatura m&aacute;ximo es entre 30 y 12 grados C.";
                                         }
+                                        // Comprobar que las listas no son nulas
+                                        if (Data.temp_min == null && Data.temp_max == null && Data.round_time == null) {
+                                            message = "No se admiten parametros nulos."; 
+                                        }
 
                                         else {
                                             message = "Los par&aacute;metros se han cambiado satisfactoriamente. Todo preparado.";
                                             ready = true;
-                                        }
-                                        // Comprobar que las listas no son nulas
-                                        if (Data.temp_min == null && Data.temp_max == null && Data.round_time == null) {
-                                            message = "No se admiten parametros nulos."; 
                                         }
 
                                         // Comprobar que las listas tengan la misma longitud
@@ -249,6 +250,7 @@ namespace TemperatureWarriorCode.Web {
                                     else {
                                         message = "La contrase&ntildeña es incorrecta.";
                                     }
+                                    
                                 }
                             }
                         }
@@ -304,153 +306,129 @@ namespace TemperatureWarriorCode.Web {
 
         public static string writeHTML(string message)
         {
-            // Si ya estamos listos, deshabilitar las entradas
-            string disabled = ready ? "disabled" : "";
+            // If we are already ready, disable all the inputs
+            string disabled = "";
+            if (ready)
+            {
+                disabled = "disabled";
+            }
 
-            // Configuración de botones y el gráfico
+            // Only show save and cooler mode in configuration mode and start round when we are ready
             string save = "<button type=\"button\" onclick='save()'>Guardar</button>";
             string temp = "<a href='#' class='btn btn-primary tm-btn-search' onclick='temp()'>Consultar Temperatura</a>";
-            string graph = "<canvas id='myChart' width='400' height='400'></canvas>"; // Gráfico siempre presente
+            string graph = "";
+            if (ready)
+            {
+                save = "";
+            }
+            string start = "";
+            if (ready)
+            {
+                start = "<button type=\"button\" onclick='start()'>Comenzar Ronda</button>";
+            }
+            if (Data.is_working)
+            {
+                start = "";
+            }
+            /*if (Data.csv_counter != 0) {
+                graph = "<canvas id='myChart' width='0' height='0'></canvas>";
+                message = "El tiempo que se ha mantenido en el rango de temperatura es de " + Data.time_in_range_temp.ToString() + " s.";
+            }*/
 
-            // Condiciones para los botones de guardar y comenzar
-            if (ready) save = "";
-            string start = ready ? "<button type=\"button\" onclick='start()'>Comenzar Ronda</button>" : "";
-            if (Data.is_working) start = "";
 
-            // Construir la página HTML
+
+            //Write the HTML page
             string html = "<!DOCTYPE html>" +
             "<html>" +
             "<head>" +
-                            "<meta charset='utf-8'>" +
-                            "<meta http-equiv='X-UA-Compatible' content='IE=edge'>" +
-                            "<meta name='viewport' content='width=device-width, initial-scale=1'>" +
+                            "<meta charset='utf - 8'>" +
+                            "<meta http - equiv = 'X-UA-Compatible' content = 'IE=edge'>" +
+                            "<meta name = 'viewport' content = 'width=device-width, initial-scale=1' > " +
                             "<title>Meadow Controller</title>" +
                             "<link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700'>" +
-                            "<link rel='stylesheet' href='http://127.0.0.1:8887/css/bootstrap.min.css'>" +
-                            "<link rel='stylesheet' href='http://127.0.0.1:8887/css/tooplate-style.css'>" +
-                            "<script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.8.0/chart.js'></script>" +
+                            "<link rel = 'stylesheet' href = 'http://127.0.0.1:8887/css/bootstrap.min.css'>" +
+                            "<link rel = 'stylesheet' href = 'http://127.0.0.1:8887/css/tooplate-style.css' >" +
+                            "<script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.8.0/chart.js'> </script>" +
+
+
             "</head>" +
-            "<body style='background-color: #f0f0f0;'>" +  // Color de fondo
-                                                           // Funciones de JavaScript para los botones
-                "<script> function save(){" +
-                "console.log(\"Calling Save in JS!!\");" +
-                "var tempMax = document.forms['params']['tempMax'].value;" +
-                "var tempMin = document.forms['params']['tempMin'].value;" +
-                "var displayRefresh = document.forms['params']['displayRefresh'].value;" +
-                "var refresh = document.forms['params']['refresh'].value;" +
-                "var time = document.forms['params']['time'].value;" +
-                "var pass = document.forms['params']['pass'].value;" +
-                "location.href = 'setparams?tempMax=' + tempMax + '&tempMin=' + tempMin + '&displayRefresh=' + displayRefresh + '&refresh=' + refresh + '&time=' + time + '&pass=' + pass;" +
-                "}" +
-                "function temp(){" +
-                "console.log(\"Calling temp in JS!!\");" +
-                "location.href = 'temp';" +
-                "}" +
-                "function start(){" +
-                "location.href = 'start';" +
-                "}" +
-                "</script>" +
-                // Configuración del gráfico
-                "<script>" +
-                "var ctx = document.getElementById('myChart').getContext('2d');" +
-                "var myChart = new Chart(ctx, {" +
-                "    type: 'line'," +
-                "    data: {" +
-                "        labels: []," +  // Etiquetas vacías al principio
-                "        datasets: [{" +
-                "            label: 'Temperatura Actual'," +
-                "            data: []," +  // Datos vacíos al principio
-                "            borderColor: 'rgba(75, 192, 192, 1)'," +
-                "            fill: false" +
-                "        }]" +
-                "    }," +
-                "    options: {" +
-                "        responsive: true," +
-                "        scales: {" +
-                "            x: { title: { display: true, text: 'Hora' } }," +
-                "            y: { title: { display: true, text: 'Temperatura (°C)' } }" +
-                "        }" +
-                "    }" +
-                "});" +
-                // Función para actualizar el gráfico
-                "function updateTemperature(){" +
-                "fetch('/realtime-temp')" +
-                ".then(response => response.json())" +
-                ".then(data => {" +
-                "var currentTime = new Date().toLocaleTimeString();" +  // Hora actual como etiqueta
-                "myChart.data.labels.push(currentTime);" +  // Añadir la hora actual
-                "myChart.data.datasets[0].data.push(data.temp);" +  // Añadir la temperatura actual" +
-                "if (myChart.data.labels.length > 10) {" +  // Limitar a los últimos 10 puntos
-                "myChart.data.labels.shift();" +
-                "myChart.data.datasets[0].data.shift();" +
-                "}" +
-                "myChart.update();" +
-                "})" +
-                ".catch(error => console.error(\"Error al obtener la temperatura:\", error));" +
-                "}" +
-                // Actualizar cada `Data.display_refresh` milisegundos
-                "var interval = " + Data.display_refresh + ";" +
-                "setInterval(updateTemperature, interval);" +
-                "</script>" +
 
-                // Resto del contenido HTML...
-                "<div class='tm-main-content' id='top'>" +
-                "<div class='tm-top-bar-bg'></div>" +
-                "<div class='container'>" +
-                "<div class='row'>" +
-                "<nav class='navbar navbar-expand-lg narbar-light'>" +
-                "<a class='navbar-brand mr-auto' href='#'>" +
-                "<img id='logo' class='logo' src='http://127.0.0.1:8887/img/6.webp' alt='Site logo' width='700' height='300'>" +
-                "</a>" +
-                "</nav>" +
-                "</div>" +
-                "</div>" +
-                "</div>" +
-                "<div class='tm-section tm-bg-img' id='tm-section-1'>" +
-                "<div class='tm-bg-white ie-container-width-fix-2'>" +
-                "<div class='container ie-h-align-center-fix'>" +
-                "<div class='row'>" +
-                "<div class='col-xs-12 ml-auto mr-auto ie-container-width-fix'>" +
-                "<form name='params' method='get' class='tm-search-form tm-section-pad-2'>" +
-                "<div class='form-row tm-search-form-row'>" +
-                "<div class='form-group tm-form-element tm-form-element-100'>" +
-                "<p>Temperatura Máx <b>(&deg;C)</b> <input name='tempMax' type='text' class='form-control' value='" + mostarDatos(Data.temp_max) + "' " + disabled + "></input></p>" +
-                "</div>" +
-                "<div class='form-group tm-form-element tm-form-element-50'>" +
-                "<p>Temperatura Mín <b>(&deg;C)</b> <input name='tempMin' type='text' class='form-control' value='" + mostarDatos(Data.temp_min) + "' " + disabled + "></input></p>" +
-                "</div>" +
-                "<div class='form-group tm-form-element tm-form-element-50'>" +
-                "<p>Duración Ronda <b>(s)</b> <input name='time' type='text' class='form-control' value='" + mostarDatos(Data.round_time) + "' " + disabled + "></input></p>" +
-                "</div>" +
-                "</div>" +
-                "<div class='form-row tm-search-form-row'>" +
-                "<div class='form-group tm-form-element tm-form-element-100'>" +
-                "<p>Cadencia Refresco <b>(ms)</b> <input name='displayRefresh' type='number' class='form-control' value='" + Data.display_refresh + "' " + disabled + "></input></p>" +
-                "</div>" +
-                "<div class='form-group tm-form-element tm-form-element-50'>" +
-                "<p>Cadencia Interna <b>(ms)</b> <input name='refresh' type='number' class='form-control' value='" + Data.refresh + "' " + disabled + "></input></p>" +
-                "</div>" +
-                "<div class='form-group tm-form-element tm-form-element-50'>" +
-                "<p>Contraseña <input name='pass' type='password' class='form-control'></input></p>" +
-                "</div>" +
-                "</form>" +
-                "<div class='form-group tm-form-element tm-form-element-50'>" +
-                save + start +
-                "</div>" +
-                "<div class='form-group tm-form-element tm-form-element-50'>" +
-                temp +
-                "</div>" +
-                "</div>" +
-                "<p style='text-align:center;font-weight:bold;'>" + message + "</p>" +
-                "</div>" +
-                "</div>" +
-                "</div>" +
-                "</div>" +
-                "</div>" +
+            "<body>" +
+                            "<script> function save(){{" +
+                            "console.log(\"Calling Save in JS!!\");" +
+                            "var tempMax = document.forms['params']['tempMax'].value;" +
+                            "var tempMin = document.forms['params']['tempMin'].value;" +
+                            "var displayRefresh = document.forms['params']['displayRefresh'].value;" +
+                            "var refresh = document.forms['params']['refresh'].value;" +
+                            "var time = document.forms['params']['time'].value;" +
+                            "var pass = document.forms['params']['pass'].value;" +
+                            "location.href = 'setparams?tempMax=' + tempMax + '&tempMin=' + tempMin + '&displayRefresh=' + displayRefresh + '&refresh=' + refresh + '&time=' + time + '&pass=' + pass;" +
+                            "}} " +
+                            "function temp(){{" +
+                            "console.log(\"Calling temp in JS!!\");" +
+                            "location.href = 'temp'" +
+                            "}} " +
+                            "function start(){{location.href = 'start'}}" +
+                            "</script>" +
 
-                "<div class='container ie-h-align-center-fix'>" +
-                graph +
-                "</div>" +
+                            "<div class='tm-main-content' id='top'>" +
+                            "<div class='tm-top-bar-bg'></div>" +
+                            "<div class='container'>" +
+                            "<div class='row'>" +
+                            "<nav class='navbar navbar-expand-lg narbar-light'>" +
+                            "<a class='navbar-brand mr-auto' href='#'>" +
+                            "<img id='logo' class='logo' src='http://127.0.0.1:8887/img/6.webp' alt='Site logo' width='700' height='300'>" +
+                            "</a>" +
+                            "</nav>" +
+                            "</div>" +
+                            "</div>" +
+                            "</div>" +
+                            "<div class='tm-section tm-bg-img' id='tm-section-1'>" +
+                            "<div class='tm-bg-white ie-container-width-fix-2'>" +
+                            "<div class='container ie-h-align-center-fix'>" +
+                            "<div class='row'>" +
+                            "<div class='col-xs-12 ml-auto mr-auto ie-container-width-fix'>" +
+                            "<form name='params' method = 'get' class='tm-search-form tm-section-pad-2'>" +
+                            "<div class='form-row tm-search-form-row'>" +
+                            "<div class='form-group tm-form-element tm-form-element-100'>" +
+                            "<p>Temperatura Max <b>(&deg;C)</b> <input name='tempMax' type='text' class='form-control' value='" + mostarDatos(Data.temp_max) + "' " + disabled + "></input></p>" +
+                            "</div>" +
+                            "<div class='form-group tm-form-element tm-form-element-50'>" +
+                            "<p>Temperatura Min <b>(&deg;C)</b> <input name='tempMin' type='text' class='form-control' value='" + mostarDatos(Data.temp_min) + "' " + disabled + "></input></p>" +
+                            "</div>" +
+                            "<div class='form-group tm-form-element tm-form-element-50'>" +
+                            "<p>Duraci&oacute;n Ronda <b>(s)</b> <input name='time' type='text' class='form-control' value='" + mostarDatos(Data.round_time) + "' " + disabled + "></input></p>" +
+                            "</div>" +
+                            "</div>" +
+                            "<div class='form-row tm-search-form-row'>" +
+                            "<div class='form-group tm-form-element tm-form-element-100'>" +
+                            "<p>Cadencia Refresco <b>(ms)</b> <input name='displayRefresh' type='number' class='form-control' value='" + Data.display_refresh + "' " + disabled + "></input></p>" +
+                            "</div>" +
+                            "<div class='form-group tm-form-element tm-form-element-50'>" +
+                            "<p>Cadencia Interna <b>(ms)</b> <input name='refresh' type='number' class='form-control' value='" + Data.refresh + "' " + disabled + "></input></p>" +
+                            "</div>" +
+                            "<div class='form-group tm-form-element tm-form-element-50'>" +
+                            "<p>Contrase&ntilde;a <input name='pass' type='password' class='form-control'> </input></p>" +
+                            "</div>" +
+
+                            "</form>" +
+                            "<div class='form-group tm-form-element tm-form-element-50'>" +
+                            save + start +
+                            "</div>" +
+                            "<div class='form-group tm-form-element tm-form-element-50'>" +
+                            temp +
+                            "</div>" +
+                            "</div>" +
+                            "<p style='text-align:center;font-weight:bold;'>" + message + "</p>" +
+                            "</div>" +
+                            "</div>" +
+                            "</div>" +
+                            "</div>" +
+                            "</div>" +
+
+                            "<div class='container ie-h-align-center-fix'>" +
+                            graph +
+                            "</div>" +
             "</body>" +
             "</html>";
             return html;
