@@ -356,11 +356,11 @@ namespace TemperatureWarriorCode.Web {
             "<body>" +
                             "<script> function save(){{" +
                             "console.log(\"Calling Save in JS!!\");" +
-                            "var tempMax = document.forms['params']['tempMax'].value;" +
-                            "var tempMin = document.forms['params']['tempMin'].value;" +
+                            "var tempMax = document.forms['params']['tempMax'].value.split(';').map(item=>item.trim()).filter(item => item.length > 0);" +
+                            "var tempMin = document.forms['params']['tempMin'].value.split(';').map(item=>item.trim()).filter(item => item.length > 0);" +
+                            "var time = document.forms['params']['time'].value.split(';').map(item=>item.trim()).filter(item => item.length > 0);" +
                             "var displayRefresh = document.forms['params']['displayRefresh'].value;" +
                             "var refresh = document.forms['params']['refresh'].value;" +
-                            "var time = document.forms['params']['time'].value;" +
                             "var pass = document.forms['params']['pass'].value;" +
                             "location.href = 'setparams?tempMax=' + tempMax + '&tempMin=' + tempMin + '&displayRefresh=' + displayRefresh + '&refresh=' + refresh + '&time=' + time + '&pass=' + pass;" +
                             "}} " +
