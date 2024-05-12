@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Threading;
 using System.Text.Json;
+using System.Security.Cryptography.X509Certificates;
+using System.Text.RegularExpressions;
 
 namespace TemperatureWarriorCode.Web {
     public class WebServer {
@@ -75,31 +77,133 @@ namespace TemperatureWarriorCode.Web {
             _runServer = false;
         }
 
-        public static bool tempCheck(string[] data, bool tipo)
+        public static string[] trimAndRemoveEmpty(string[] data) {
+            if (data == null) {
+                return data;
+            }
+            
+            List<string> cleanedData = new List<string>();
+            
+            foreach (string item in data) {
+                string trimmedItem = item.Trim();
+                if (!string.IsNullOrWhiteSpace(trimmedItem)) {
+                    cleanedData.Add(trimmedItem);
+                }
+            }
+            
+            return cleanedData.ToArray();
+        }
+
+        // Checks if the string contains only numbers
+        public static bool isAllNumbers(string input)
         {
-            if (data != null)
+            return Regex.IsMatch(input, @"^-?\d+(\.\d+)?$");
+        }
+
+        public static string tempCheck(string[] data)
+        {
+            if (data == null)
+            {   
+                Console.WriteLine("Data is null");
+                return "Data is null";
+            }
+
+            foreach (string item in data)
             {
-                for (int i = 0; i < data.Length; i++)
+                if (string.IsNullOrWhiteSpace(item))
                 {
-                    if (tipo)
-                    {
-                        if (!string.IsNullOrWhiteSpace(data[i].ToString()) && Double.Parse(data[i].ToString()) < 12)
+                    return "Empty value"; // empty value
+                }else if (!isAllNumbers(item))
+                {
+                    return "Not a number: " + item; // not a number
+                }else if (int.Parse(item) < 12 || int.Parse(item) > 30)
+                {
+                    return "Out of range: " + item; // out of range
+                }
+                
+            }
+            return ""; // all correct
+        }
+
+        // check if elements in array temp_max are greater than elements in array temp_min
+        public static string compareMaxMinValues(string[] temp_max, string[] temp_min)
+        {
+            try{
+                
+                if (temp_max == null || temp_min == null)
+                {
+                    Console.WriteLine("Data is null");
+                    return "Data is null";
+                }
+
+                for (int i = 0; i < temp_max.Length; i++)
+                {   
+                    try{
+                        if (string.IsNullOrWhiteSpace(temp_max[i]) || string.IsNullOrWhiteSpace(temp_min[i]))
                         {
-                            return false;
+                            return "Value is empty: " + temp_max[i] + " " + temp_min[i];
                         }
-                    }
-                    else
-                    {
-                        if (!string.IsNullOrWhiteSpace(data[i].ToString()) && Double.Parse(data[i].ToString()) > 30)
+                        else if (!isAllNumbers(temp_max[i]) || !isAllNumbers(temp_min[i]))
                         {
-                            return false;
+                            return "Value is not a number: " + temp_max[i] + " " + temp_min[i];
                         }
+                        if (int.Parse(temp_max[i]) <= int.Parse(temp_min[i]))
+                        {
+                            return "Temp max is smaller than Temp min in position: " + i + " Temp max: " + temp_max[i] + " Temp min: " + temp_min[i];
+                        }
+                    }catch(Exception e){
+                        Console.WriteLine("Error en compareMaxMinValues");
+                        Console.WriteLine(e);
                     }
                 }
-                return true;
+            }catch(Exception e){
+                Console.WriteLine("Error en compareMaxMinValues");
+                Console.WriteLine(e);
+                return "Error en compareMaxMinValues: " + e;
             }
-            return true;
+            return "";
         }
+
+        public static string timeCheck(string[] data)
+        {
+            if (data == null)
+            {return "Data is Null";}
+
+            foreach (string item in data)
+            {
+                if (string.IsNullOrWhiteSpace(item))
+                {
+                    return "Value is empty: " + data;
+                }
+                else if (!isAllNumbers(item))
+                {
+                    return "Value is not a number: " + data;
+                }
+            }
+            return "";
+            
+        }
+
+        public static string refreshValueCheck(string data)
+        {
+            try{
+                if (string.IsNullOrWhiteSpace(data))
+                {
+                    return "Value is empty: " + data;
+                }
+                else if (!isAllNumbers(data))
+                {
+                    return "Value is not a number: " + data;
+                }
+            }catch(Exception e){
+                Console.WriteLine("Error en refreshValueCheck");
+                Console.WriteLine(e);
+                return "Error en refreshValueCheck: " + e;
+            }
+            return "";
+
+        }
+
         private async Task HandleIncomingConnections() {
 
             await Task.Run(async () => {
@@ -174,101 +278,131 @@ namespace TemperatureWarriorCode.Web {
                     }
 
                     if (req.Url.AbsolutePath == "/setparams") {
+                        try{
+                            //Get parameters
+                            string url = req.RawUrl;
+                            if (!string.IsNullOrWhiteSpace(url)) {
 
-                        //Get parameters
-                        string url = req.RawUrl;
-                        if (!string.IsNullOrWhiteSpace(url)) {
-
-                            //Get text to the right from the interrogation mark
-                            string[] urlParts = url.Split('?');
-                            if (urlParts?.Length >= 1) {
-
-                                //The parametes are in the array first position
-                                string[] parameters = urlParts[1].Split('&');
-                                if (parameters?.Length >= 2) {
-
-                                    // Param 5 => to pass
-                                    string[] pass_parts = parameters[5].Split('=');
-                                    string pass_temp = pass_parts[1];
-
-                                    if (string.Equals(pass, pass_temp)) {
+                                //Get text to the right from the interrogation mark
+                                string[] urlParts = url.Split('?');
+                                if (urlParts?.Length >= 1) {  
+                                    //The parametes are in the array first position
+                                    string[] parameters = urlParts[1].Split('&');
+                                    if (parameters?.Length >= 2) {
 
                                         // Param 0 => Temp max
-                                        string[] temp_max_parts = parameters[0].Split('=');
-                                        //string[] temp_max_final = temp_max_parts[1].Split(";");
-                                        //Data.temp_max = new string[] { temp_max_parts[1].Split(";") };
-                                        Data.temp_max = temp_max_parts[1].Split(";");
-
-
                                         // Param 1 => Temp min
-                                        string[] temp_min_parts = parameters[1].Split('=');
-                                        //Data.temp_min = new string[] { temp_min_parts[1] };
-                                        //Data.temp_min = new string[] { "12", "12" };
-                                        Data.temp_min = temp_min_parts[1].Split(";");
-
                                         // Param 2 => to display_refresh
-                                        string[] display_refresh_parts = parameters[2].Split('=');
-                                        Data.display_refresh = Int16.Parse(display_refresh_parts[1]);
-                                        //Data.display_refresh = 1000;
-
                                         // Param 3 => to refresh
-                                        string[] refresh_parts = parameters[3].Split('=');
-                                        Data.refresh = Int16.Parse(refresh_parts[1]);
-                                        //Data.refresh = 1000;
-                                        
-
-
                                         // Param 4 => to round_time
-                                        string[] round_time_parts = parameters[4].Split('=');
-                                        //Data.round_time = new string[] { round_time_parts[1] };
-                                        //Data.round_time = new string[] { "5", "15" };
-                                        Data.round_time = round_time_parts[1].Split(";");
+                                        // Param 5 => to pass
 
-                                        if (!tempCheck(Data.temp_max, false) || !tempCheck(Data.temp_min, true)) {
-                                            message = "El rango de temperatura m&aacute;ximo es entre 30 y 12 grados C.";
-                                        }
-                                        // Comprobar que las listas no son nulas
-                                        if (Data.temp_min == null && Data.temp_max == null && Data.round_time == null) {
-                                            message = "No se admiten parametros nulos."; 
+                                        // retrieve values from the parameters
+                                        string[] temp_max_parts         = parameters[0].Split('=');
+                                        string[] temp_min_parts         = parameters[1].Split('=');
+                                        string[] display_refresh_parts  = parameters[2].Split('=');
+                                        string[] refresh_parts          = parameters[3].Split('=');
+                                        string[] round_time_parts       = parameters[4].Split('=');
+                                        string[] pass_parts             = parameters[5].Split('=');
+                                        
+                                        string[] temp_max_array         = trimAndRemoveEmpty(temp_max_parts[1].Split(';'));
+                                        string[] temp_min_array         = trimAndRemoveEmpty(temp_min_parts[1].Split(';'));
+                                        string[] round_time_array       = trimAndRemoveEmpty(round_time_parts[1].Split(';'));
+                                        string display_refresh_str      = display_refresh_parts[1];
+                                        string refresh_str              = refresh_parts[1];
+                                        string pass_temp                = pass_parts[1];
+
+                                        Console.WriteLine("Temp max: " + mostarDatos(temp_max_array));
+                                        Console.WriteLine("Temp min: " + mostarDatos(temp_min_array));
+                                        Console.WriteLine("Round time: " + mostarDatos(round_time_array));
+                                        Console.WriteLine("Display refresh: " + display_refresh_str);
+                                        Console.WriteLine("Refresh: " + refresh_str);
+                                        // check if there are empty values and empty lists
+                                        bool allCorrect = true;
+
+                                        // Check for empty fields
+                                        if (temp_max_array == null || temp_min_array == null || round_time_array == null || 
+                                                temp_max_array.Length == 0 || temp_min_array.Length == 0 || round_time_array.Length == 0 ||
+                                                string.IsNullOrWhiteSpace(display_refresh_str) || string.IsNullOrWhiteSpace(refresh_str) || string.IsNullOrWhiteSpace(pass_temp)) {
+                                            message = "There are empty values!";
+                                            allCorrect = false;
                                         }
 
-                                        else {
-                                            message = "Los par&aacute;metros se han cambiado satisfactoriamente. Todo preparado.";
-                                            ready = true;
+                                        // check if the values are correct
+                                        if (allCorrect && !string.Equals(pass, pass_temp)) {
+                                            message = "Wrong PASSWORD!";
+                                            allCorrect = false;
                                         }
 
-                                        // Comprobar que las listas tengan la misma longitud
-                                        if (Data.temp_min.Length != Data.temp_max.Length && Data.temp_min.Length != Data.round_time.Length) {
-                                            message = "Tiene que haber el mismo numero de argumentos en todos los parametros.";
+                                        string output = tempCheck(temp_max_array);
+                                        if(allCorrect && output != "") {
+                                            message = "Incorrect value/s in TEMP MAX: " + output;
+                                            allCorrect = false;
+                                        }
+                                        
+                                        output = tempCheck(temp_min_array);
+                                        if(allCorrect && output != "") {
+                                            message = "Incorrect value/s in TEMP MIN: " + output;
+                                            allCorrect = false;
+                                        }
+                                        output = timeCheck(round_time_array);
+
+                                        if (allCorrect && output != "") {
+                                            message = "Incorrect value/s in ROUND TIME: " + output;
+                                            allCorrect = false;
                                         }
 
-                                        // Comprobar que display_refresh sea mayor que 0
-                                        if (Data.display_refresh <= 0) {
-                                            message = "El tiempo de refresco debe ser mayor que 0";
-                                            }
+                                        output = compareMaxMinValues(temp_max_array, temp_min_array);
+                                        
+                                        if (allCorrect && output != "") {
+                                            message = "Incorrect some value/s in TEMP MAX is smaller than TEMP MIN: " + output;
+                                            allCorrect = false;
+                                        }
+                                        
+                                        if (allCorrect && (int.TryParse(display_refresh_str, out int n) == false || n < 0)) {
+                                            message = "Incorrect value in DISPLAY REFRESH!";
+                                            allCorrect = false;
+                                        }
+                                        
+                                        if (allCorrect && (int.TryParse(refresh_str, out int m) == false || m < 0)){
+                                            message = "Incorrect value in REFRESH!";
+                                            allCorrect = false;
+                                        }
+
+
+                                        if (allCorrect){
+                                            Data.temp_max = temp_max_parts[1].Split(";");
+                                            Data.temp_min = temp_min_parts[1].Split(";");
+                                            Data.display_refresh = int.Parse(display_refresh_str);
+                                            Data.refresh = int.Parse(refresh_str);
+                                            Data.round_time = round_time_parts[1].Split(";");
+                                        }
                                     }
-                                    else {
-                                        message = "La contrase&ntildeña es incorrecta.";
-                                    }
-                                    
                                 }
                             }
+                        }catch (Exception e){
+                            Console.WriteLine("Error en setparams");
+                            Console.WriteLine(e);
                         }
-
                     }
+
                     if (req.Url.AbsolutePath == "/start") {
+                        try{
+                            // Start the round
+                            Thread ronda = new Thread(MeadowApp.StartRound);
+                            ronda.Start();
 
-                        // Start the round
-                        Thread ronda = new Thread(MeadowApp.StartRound);
-                        ronda.Start();
+                            // Wait for the round to finish
+                            while (Data.is_working) {
+                                Thread.Sleep(1000);
+                            }
+                            ready = false;
 
-                        // Wait for the round to finish
-                        while (Data.is_working) {
-                            Thread.Sleep(1000);
+                            message = "Se ha terminado la ronda con " + Data.time_in_range_temp + "s en el rango indicado.";
+                        }catch (Exception e){
+                            Console.WriteLine("Error en start");
+                            Console.WriteLine(e);
                         }
-                        ready = false;
-
-                        message = "Se ha terminado la ronda con " + Data.time_in_range_temp + "s en el rango indicado.";
                     }
                     if (req.Url.AbsolutePath == "/temp") {
                         message = $"La temperatura actual es {Data.temp_act}";
@@ -356,9 +490,9 @@ namespace TemperatureWarriorCode.Web {
             "<body>" +
                             "<script> function save(){{" +
                             "console.log(\"Calling Save in JS!!\");" +
-                            "var tempMax = document.forms['params']['tempMax'].value.split(';').map(item=>item.trim()).filter(item => item.length > 0);" +
-                            "var tempMin = document.forms['params']['tempMin'].value.split(';').map(item=>item.trim()).filter(item => item.length > 0);" +
-                            "var time = document.forms['params']['time'].value.split(';').map(item=>item.trim()).filter(item => item.length > 0);" +
+                            "var tempMax = document.forms['params']['tempMax'].value;" +
+                            "var tempMin = document.forms['params']['tempMin'].value;" +
+                            "var time = document.forms['params']['time'].value;" +
                             "var displayRefresh = document.forms['params']['displayRefresh'].value;" +
                             "var refresh = document.forms['params']['refresh'].value;" +
                             "var pass = document.forms['params']['pass'].value;" +
