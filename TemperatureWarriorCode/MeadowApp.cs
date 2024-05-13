@@ -195,7 +195,6 @@ namespace TemperatureWarriorCode
 
                 count++;
             }
-            /*TESTING HW            /*TESTING HW
             ////////////////////////////////////////// DEVICE TESTING //////////////////////////////////////////
 
             //////////////////// TESTING PELTIER ////////////////////
@@ -241,7 +240,7 @@ namespace TemperatureWarriorCode
             /////////////////// END OF TESTING FAN //////////////////
 
             ////////////////////////////////////// END OF DEVICE TESTING ///////////////////////////////////////
-            */
+            
         }
 
         //TW Combat Round
@@ -305,14 +304,17 @@ namespace TemperatureWarriorCode
                             // Turn off peltier and turn on heat gun
                             peltier.TurnOff();
                             heatGun.TurnOn();
+                            Console.WriteLine("Turning on heat gun");
                         } else if (pidOutput < -0.5) {
                             // Turn off heat gun and turn on peltier
                             peltier.TurnOn();
                             heatGun.TurnOff();
+                            Console.WriteLine("Turning on peltier");
                         } else {
                             // Turn off peltier and heat gun
                             peltier.TurnOff();
                             heatGun.TurnOff();
+                            Console.WriteLine("Turning off peltier and heat gun");
                         }
                         // PUNTO X
                         Thread.Sleep(Data.refresh - sleep_time);
