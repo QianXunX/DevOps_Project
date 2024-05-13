@@ -312,11 +312,14 @@ namespace TemperatureWarriorCode.Web {
                                         string refresh_str              = refresh_parts[1];
                                         string pass_temp                = pass_parts[1];
 
+                                        /*
                                         Console.WriteLine("Temp max: " + mostarDatos(temp_max_array));
                                         Console.WriteLine("Temp min: " + mostarDatos(temp_min_array));
                                         Console.WriteLine("Round time: " + mostarDatos(round_time_array));
                                         Console.WriteLine("Display refresh: " + display_refresh_str);
                                         Console.WriteLine("Refresh: " + refresh_str);
+                                        */
+
                                         // check if there are empty values and empty lists
                                         bool allCorrect = true;
 
@@ -375,7 +378,15 @@ namespace TemperatureWarriorCode.Web {
                                             Data.temp_min = temp_min_parts[1].Split(";");
                                             Data.display_refresh = int.Parse(display_refresh_str);
                                             Data.refresh = int.Parse(refresh_str);
-                                            Data.round_time = round_time_parts[1].Split(";");
+                                            Data.round_time = round_time_array;
+                                            Console.WriteLine("Temp max: " + mostarDatos(Data.temp_max));
+                                            Console.WriteLine("Temp min: " + mostarDatos(Data.temp_min));
+                                            Console.WriteLine("Round time: " + mostarDatos(Data.round_time));
+                                            Console.WriteLine("Display refresh: " + Data.display_refresh);
+                                            Console.WriteLine("Refresh: " + Data.refresh);
+
+                                            ready = true;
+                                            message = "Se han guardado los valores correctamente.";
                                         }
                                     }
                                 }
@@ -451,15 +462,19 @@ namespace TemperatureWarriorCode.Web {
             string save = "<button type=\"button\" onclick='save()'>Guardar</button>";
             string temp = "<a href='#' class='btn btn-primary tm-btn-search' onclick='temp()'>Consultar Temperatura</a>";
             string graph = "";
+            string start = "";
+
             if (ready)
             {
                 save = "";
+                start = "<button type=\"button\" onclick='start()'>Comenzar Ronda</button>";
+
             }
-            string start = "";
+            /*string start = "";
             if (ready)
             {
                 start = "<button type=\"button\" onclick='start()'>Comenzar Ronda</button>";
-            }
+            }*/
             if (Data.is_working)
             {
                 start = "";

@@ -242,12 +242,12 @@ namespace TemperatureWarriorCode
 
             ////////////////////////////////////// END OF DEVICE TESTING ///////////////////////////////////////
             */
-            StartRound();
         }
 
         //TW Combat Round
         public static void StartRound()
         {   
+            Console.WriteLine("Starting Round");
             //Value to control the time for heating and cooling
             //First iteration is 100 for the time spend creating timecontroller and thread
             int sleep_time = 20;

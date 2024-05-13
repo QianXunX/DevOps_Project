@@ -1,10 +1,10 @@
 ﻿namespace TemperatureWarriorCode {
     internal class Secrets {
 
-        //WiFi NAME 
-        public const string WIFI_NAME = "Livebox6-696A";
+        //WiFi NAME  Livebox6-696A
+        public const string WIFI_NAME = "syjun";
 
-        //PASSWORD FOR THE WiFi NAME
-        public const string WIFI_PASSWORD = "tzvnk7Vz2Qcn";
+        //PASSWORD FOR THE WiFi NAME tzvnk7Vz2Qcn
+        public const string WIFI_PASSWORD = "12341234";
     }
 }
