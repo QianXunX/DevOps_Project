@@ -132,6 +132,8 @@ namespace TemperatureWarriorCode
         static HeatGun heatGun;
         //Peltier
         static Peltier peltier;
+        // PID Controller
+        static PidAlgo.PIDController pid;
         //Config variables
         public bool okay = false;
 
@@ -144,13 +146,16 @@ namespace TemperatureWarriorCode
                 // TODO uncomment when needed
 
                 // Create the fan passing the Device and the pin
-                // fan = new Fan(Device, Device.Pins.D02);
+                fan = new Fan(Device, Device.Pins.D02);
 
                 // Create the heat gun passing the Device and the pin
-                // heatGun = new HeatGun(Device, Device.Pins.D15);
+                heatGun = new HeatGun(Device, Device.Pins.D15);
 
                 // Create the peltier passing the Device and the pin
-                // Peltier peltier = new Peltier(Device, Device.Pins.D14);
+                peltier = new Peltier(Device, Device.Pins.D14);
+
+                // Create the PID controller
+                pid = new PidAlgo.PIDController(1, 1, 1);
 
                 // Temperature Sensor Configuration
                 sensor = new AnalogTemperature(analogPin: Device.Pins.A01, sensorType: AnalogTemperature.KnownSensorType.TMP36);
@@ -243,13 +248,6 @@ namespace TemperatureWarriorCode
         //TW Combat Round
         public static void StartRound()
         {   
-            // Initialize peltier and heatgun
-            Peltier peltier = new Peltier(Device, Device.Pins.D14);
-            HeatGun heatGun = new HeatGun(Device, Device.Pins.D15);
-            PidAlgo.PIDController pid = new PidAlgo.PIDController(1, 1, 1);
-            Stopwatch timer = Stopwatch.StartNew();
-            timer.Start();
-
             //Value to control the time for heating and cooling
             //First iteration is 100 for the time spend creating timecontroller and thread
             int sleep_time = 20;
