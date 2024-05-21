@@ -225,52 +225,6 @@ namespace TemperatureWarriorCode.Web {
                     Console.WriteLine(req.UserAgent);
                     Console.WriteLine();
 
-                    /*
-                    // Endpoint para devolver el valor de display_refresh
-                    if (req.Url.AbsolutePath == "/display-refresh")
-                    {
-                        // Obtén el valor de Data.display_refresh
-                        int refreshInterval = Data.display_refresh;
-
-                        // Devuelve el valor como JSON
-                        string jsonResponse = JsonSerializer.Serialize(new
-                        {
-                            refresh = refreshInterval
-                        });
-
-                        byte[] responseBytes = Encoding.UTF8.GetBytes(jsonResponse);
-                        resp.ContentType = "application/json";
-                        resp.ContentEncoding = Encoding.UTF8;
-                        resp.ContentLength64 = responseBytes.Length;
-
-                        await resp.OutputStream.WriteAsync(responseBytes, 0, responseBytes.Length);
-                        resp.Close();
-                    }
-                    // Endpoint para devolver la temperatura actual
-                    if (req.Url.AbsolutePath == "/realtime-temp")
-                    {
-                        // Obtén el valor actual de la temperatura
-                        string tempActual = Data.temp_act;
-
-                        // Crea una respuesta JSON con la temperatura
-                        var jsonResponse = new
-                        {
-                            temp = tempActual
-                        };
-
-                        // Convierte a JSON usando `System.Text.Json`
-                        string jsonString = JsonSerializer.Serialize(jsonResponse);
-
-                        byte[] responseBytes = Encoding.UTF8.GetBytes(jsonString);
-                        resp.ContentType = "application/json";
-                        resp.ContentEncoding = Encoding.UTF8;
-                        resp.ContentLength64 = responseBytes.Length;
-
-                        await resp.OutputStream.WriteAsync(responseBytes, 0, responseBytes.Length);
-                        resp.Close();
-                    }
-                    */
-
                     // If `shutdown` url requested w/ POST, then shutdown the server after serving the page
                     if (req.HttpMethod == "POST" && req.Url.AbsolutePath == "/shutdown") {
                         Console.WriteLine("Shutdown requested");
@@ -479,11 +433,13 @@ namespace TemperatureWarriorCode.Web {
             {
                 start = "";
             }
-            /*if (Data.csv_counter != 0) {
+
+            /*
+            if (true) {
                 graph = "<canvas id='myChart' width='0' height='0'></canvas>";
                 message = "El tiempo que se ha mantenido en el rango de temperatura es de " + Data.time_in_range_temp.ToString() + " s.";
-            }*/
-
+            }
+            */
 
 
             //Write the HTML page
@@ -576,7 +532,7 @@ namespace TemperatureWarriorCode.Web {
                             "</div>" +
 
                             "<div class='container ie-h-align-center-fix'>" +
-                            graph +
+                            //graph +
                             "</div>" +
             "</body>" +
             "</html>";

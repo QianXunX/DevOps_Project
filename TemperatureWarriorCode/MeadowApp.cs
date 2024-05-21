@@ -21,6 +21,7 @@ using Meadow.Gateways.Bluetooth;
 using System.Collections.Generic;
 
 using PidAlgo;
+using System.Dynamic;
 
 namespace TemperatureWarriorCode
 {
@@ -195,9 +196,54 @@ namespace TemperatureWarriorCode
 
                 count++;
             }
-            ////////////////////////////////////////// DEVICE TESTING //////////////////////////////////////////
 
-            //////////////////// TESTING PELTIER ////////////////////
+            /*
+            // Turn on the fan
+            Console.WriteLine("Turning on the fan");
+            fan.TurnOn();
+            /////////////////// TESTING PELTIER ////////////////////
+            while (true)
+            {
+                // Turn on the peltier
+                Console.WriteLine("Turning on the peltier");
+                peltier.TurnOn();
+                Thread.Sleep(2000);
+                // Turn off the peltier
+                Console.WriteLine("Turning off the peltier");
+                peltier.TurnOff();
+
+                // Turn on the heat gun
+                Console.WriteLine("Turning on the heat gun");
+                heatGun.TurnOn();
+                Thread.Sleep(5000);
+                // Turn off the heat gun
+                Console.WriteLine("Turning off the heat gun");
+                heatGun.TurnOff();
+                Thread.Sleep(5000);
+
+            }
+
+
+            ////////////////////////////////////////// DEVICE TESTING //////////////////////////////////////////
+            ////////////////////// TESTING FAN //////////////////////
+            ///
+
+
+            while (true)
+            {
+                // Turn on the fan
+                Console.WriteLine("Turning on the fan");
+                fan.TurnOn();
+                Thread.Sleep(5000);
+                // Turn off the fan
+                Console.WriteLine("Turning off the fan");
+                fan.TurnOff();
+                Thread.Sleep(5000);
+            }
+            /////////////////// END OF TESTING FAN //////////////////
+
+            
+             /////////////////// TESTING PELTIER ////////////////////
             while (true)
             {
                 // Turn on the peltier
@@ -210,6 +256,9 @@ namespace TemperatureWarriorCode
                 Thread.Sleep(2000);
             }
             //////////////// END OF TESTING PELTIER /////////////////
+            ///
+
+
 
             //////////////////// TESTING HEAT GUN ///////////////////
             while (true)
@@ -225,126 +274,180 @@ namespace TemperatureWarriorCode
             }
             //////////////// END OF TESTING HEAT GUN ////////////////
 
-            ////////////////////// TESTING FAN //////////////////////
-            while (true)
-            {
-                // Turn on the fan
-                Console.WriteLine("Turning on the fan");
-                fan.TurnOn();
-                Thread.Sleep(5000);
-                // Turn off the fan
-                Console.WriteLine("Turning off the fan");
-                fan.TurnOff();
-                Thread.Sleep(5000);
-            }
-            /////////////////// END OF TESTING FAN //////////////////
-
             ////////////////////////////////////// END OF DEVICE TESTING ///////////////////////////////////////
-            
+            */
         }
 
         //TW Combat Round
         public static void StartRound()
-        {   
-            Console.WriteLine("Starting Round");
-            //Value to control the time for heating and cooling
-            //First iteration is 100 for the time spend creating timecontroller and thread
-            int sleep_time = 20;
-
-            //Initialization of time controller
-            TimeController timeController = new TimeController();
-
-            //Configuration of differents ranges
-            TemperatureRange[] temperatureRanges = new TemperatureRange[Data.round_time.Length];
-
-            //Range configurations
-            bool success;
-            string error_message = null;
-            Data.is_working = true;
-
-            //define ranges
-            for (int i = 0; i < Data.temp_min.Length; i++)
+        {
+            try
             {
-                Console.WriteLine(Data.temp_max[i]);
-                // Save all ranges to temperature Ranges
-                temperatureRanges[i] = new TemperatureRange(double.Parse(Data.temp_min[i]), double.Parse(Data.temp_max[i]), int.Parse(Data.round_time[i]) * 1000);
-                total_time += int.Parse(Data.round_time[i]);
-            }
+                Console.WriteLine(string.Join(", ", Data.temp_max));
+                Console.WriteLine(string.Join(", ", Data.temp_min));
+                Console.WriteLine(string.Join(", ", Data.round_time));
 
-            //Initialization of timecontroller with the ranges
-            timeController.DEBUG_MODE = false;
-            success = timeController.Configure(temperatureRanges, total_time * 1000, Data.refresh, out error_message);
-            Console.WriteLine(success);
+                Console.WriteLine("Starting Round");
+                //Value to control the time for heating and cooling
+                //First iteration is 100 for the time spend creating timecontroller and thread
+                int sleep_time = 20;
 
-            //Initialization of timer
-            Thread t = new Thread(Timer);
-            t.Start();
+                //Initialization of time controller
+                TimeController timeController = new TimeController();
 
-            Stopwatch regTempTimer = new Stopwatch();
-            timeController.StartOperation(); // aquí se inicia el conteo en la librería de control
-            regTempTimer.Start();
+                //Configuration of differents ranges
+                TemperatureRange[] temperatureRanges = new TemperatureRange[Data.round_time.Length];
 
-            Console.WriteLine("STARTING");
+                //Range configurations
+                bool success;
+                string error_message = null;
+                Data.is_working = true;
 
-            //THE TW (Temperature Warrior) START WORKING
-            while (Data.is_working)
-            {
-                for (int i = 0; i < temperatureRanges.Length; i++){
-                    // Setpoint calculation
-                    double setPoint = temperatureRanges[i].MaxTemp + temperatureRanges[i].MinTemp / 2;
-                    Stopwatch roundTimer = Stopwatch.StartNew(); // Temporizador para la ronda actual
-                    while (roundTimer.ElapsedMilliseconds < temperatureRanges[i].RangeTimeInMilliseconds)
+                //define ranges
+                for (int i = 0; i < Data.temp_min.Length; i++)
+                {
+                    Console.WriteLine(Data.temp_max[i]);
+                    // Save all ranges to temperature Ranges
+                    if (double.TryParse(Data.temp_min[i], out double tempMin) &&
+                    double.TryParse(Data.temp_max[i], out double tempMax) &&
+                    int.TryParse(Data.round_time[i], out int roundTime))
                     {
-                        // LEER DEL SENSOR
-                        double currentTemp = 0; 
-
-                        // Calculate pid output
-                        double pidOutput = pid.Update(currentTemp, setPoint);
-                        if (pidOutput > 0.5) {
-                            // Turn off peltier and turn on heat gun
-                            peltier.TurnOff();
-                            heatGun.TurnOn();
-                            Console.WriteLine("Turning on heat gun");
-                        } else if (pidOutput < -0.5) {
-                            // Turn off heat gun and turn on peltier
-                            peltier.TurnOn();
-                            heatGun.TurnOff();
-                            Console.WriteLine("Turning on peltier");
-                        } else {
-                            // Turn off peltier and heat gun
-                            peltier.TurnOff();
-                            heatGun.TurnOff();
-                            Console.WriteLine("Turning off peltier and heat gun");
-                        }
-                        // PUNTO X
-                        Thread.Sleep(Data.refresh - sleep_time);
+                        temperatureRanges[i] = new TemperatureRange(tempMin, tempMax, roundTime * 1000);
+                        total_time += roundTime;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Error parsing temperature ranges");
+                        Console.WriteLine("Array: " + Data.temp_max + Data.temp_min);
+                        Console.WriteLine(Data.temp_min[i], Data.temp_max[i], Data.round_time[i]);
+                        return;
                     }
                 }
+                // Turning on the fan
 
-                // SOSPECHO PONER TODO LO DE ABAJO EN PUNTO X
-                // PARA QUE SIRVE ESTO
-                //This is the time refresh we did not do before
-                //Thread.Sleep(Data.refresh - sleep_time);
 
-                //Temperature registration
-                Console.WriteLine($"RegTempTimer={regTempTimer.Elapsed.ToString()}, enviando Temp={Data.temp_act}");
-                timeController.RegisterTemperature(double.Parse(Data.temp_act));
-                regTempTimer.Restart();
+                //Initialization of timecontroller with the ranges
+                timeController.DEBUG_MODE = false;
+                success = timeController.Configure(temperatureRanges, total_time * 1000, Data.refresh, out error_message);
+                Console.WriteLine(success);
 
+                //Initialization of timer
+                Thread t = new Thread(Timer);
+
+                // Initial settings
+                fan.TurnOn();
+                peltier.TurnOff();
+                heatGun.TurnOff();
+
+                // Create arrat to store temperature values named registered_temps
+                Data.csv_count = new string[0];
+
+                t.Start();
+
+                Stopwatch regTempTimer = new Stopwatch();
+                timeController.StartOperation(); // aquí se inicia el conteo en la librería de control
+                regTempTimer.Start();
+
+                Console.WriteLine("STARTING ROUND ==================================================");
+
+                //THE TW (Temperature Warrior) START WORKING
+                while (Data.is_working)
+                {
+                    for (int i = 0; i < temperatureRanges.Length; i++)
+                    {
+                        // Setpoint calculation
+                        double setPoint = temperatureRanges[i].MaxTemp + temperatureRanges[i].MinTemp / 2;
+                        Stopwatch roundTimer = Stopwatch.StartNew(); // Temporizador para la ronda actual
+                        while (roundTimer.ElapsedMilliseconds < temperatureRanges[i].RangeTimeInMilliseconds)
+                        {
+                            if (double.TryParse(Data.temp_act, out double currentTemp))
+                            {
+
+                                // Save the current temperature to the csv array
+                                Data.csv_count = AppendToArray(Data.csv_count, Data.temp_act.ToString());
+
+                                AppendToArray(Data.csv_count, currentTemp.ToString());
+
+                                // Calculate pid output
+                                double pidOutput = pid.Update(currentTemp, setPoint);
+                                if (pidOutput > 0.5)
+                                {
+                                    // Turn off peltier and turn on heat gun
+                                    peltier.TurnOff();
+                                    heatGun.TurnOn();
+                                    Console.WriteLine("Turning on heat gun");
+                                }
+                                else if (pidOutput < -0.5)
+                                {
+                                    // Turn off heat gun and turn on peltier
+                                    peltier.TurnOn();
+                                    heatGun.TurnOff();
+                                    Console.WriteLine("Turning on peltier");
+                                }
+                                else
+                                {
+                                    // Turn off peltier and heat gun
+                                    peltier.TurnOff();
+                                    heatGun.TurnOff();
+                                    Console.WriteLine("Turning off peltier and heat gun");
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine("Error parsing temperature" + Data.temp_act);
+                            }
+                            // PUNTO X
+                            Thread.Sleep(Data.refresh - sleep_time);
+                        }
+                    }
+
+                    // SOSPECHO PONER TODO LO DE ABAJO EN PUNTO X
+                    // PARA QUE SIRVE ESTO
+                    //This is the time refresh we did not do before
+                    //Thread.Sleep(Data.refresh - sleep_time);
+
+                    //Temperature registration
+                    Console.WriteLine($"RegTempTimer={regTempTimer.Elapsed.ToString()}, enviando Temp={Data.temp_act}");
+                    timeController.RegisterTemperature(double.Parse(Data.temp_act));
+                    regTempTimer.Restart();
+
+                }
+                // END OF THE ROUND
+                // Turn off the fan
+                peltier.TurnOff();
+                heatGun.TurnOff();
+                Console.WriteLine("Round Finish");
+                t.Abort();
+
+                total_time_in_range += timeController.TimeInRangeInMilliseconds;
+                total_time_out_of_range += timeController.TimeOutOfRangeInMilliseconds;
+                Data.time_in_range_temp = (timeController.TimeInRangeInMilliseconds / 1000);
+
+                Console.WriteLine("Tiempo dentro del rango " + (((double)timeController.TimeInRangeInMilliseconds / 1000)) + " s de " + total_time + " s");
+                Console.WriteLine("Tiempo fuera del rango " + ((double)total_time_out_of_range / 1000) + " s de " + total_time + " s");
+
+                // Print the csv array
+                Console.WriteLine("CSV ARRAY " + Data.csv_count);
+            }catch(Exception e)
+            {
+                Console.WriteLine("Error in StartRound");
+                Console.WriteLine(e);
             }
-            // END OF THE ROUND
-            // Turn off the fan
-            peltier.TurnOff();
-            heatGun.TurnOff();
-            Console.WriteLine("Round Finish");
-            t.Abort();
+        }
 
-            total_time_in_range += timeController.TimeInRangeInMilliseconds;
-            total_time_out_of_range += timeController.TimeOutOfRangeInMilliseconds;
-            Data.time_in_range_temp = (timeController.TimeInRangeInMilliseconds / 1000);
+        static T[] AppendToArray<T>(T[] array, T value) {
+            // Create a new array with a size one larger than the original array
+            T[] newArray = new T[array.Length + 1];
 
-            Console.WriteLine("Tiempo dentro del rango " + (((double)timeController.TimeInRangeInMilliseconds / 1000)) + " s de " + total_time + " s");
-            Console.WriteLine("Tiempo fuera del rango " + ((double)total_time_out_of_range / 1000) + " s de " + total_time + " s");
+            // Copy elements from the original array to the new array
+            for (int i = 0; i < array.Length; i++) {
+                newArray[i] = array[i];
+            }
+
+            // Add the new value to the end of the new array
+            newArray[newArray.Length - 1] = value;
+
+            return newArray;
         }
 
         //Round Timer
