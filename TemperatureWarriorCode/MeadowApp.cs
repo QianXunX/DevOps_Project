@@ -278,14 +278,20 @@ namespace TemperatureWarriorCode
             */
         }
 
+        static void printArray(string[] array)
+        {
+            string result = "[" + string.Join(", ", array) + "]";
+            Console.WriteLine(result);
+        }
+
         //TW Combat Round
         public static void StartRound()
         {
             try
             {
-                Console.WriteLine(string.Join(", ", Data.temp_max));
-                Console.WriteLine(string.Join(", ", Data.temp_min));
-                Console.WriteLine(string.Join(", ", Data.round_time));
+                printArray(Data.temp_max);
+                printArray(Data.temp_min);
+                printArray(Data.round_time);
 
                 Console.WriteLine("Starting Round");
                 //Value to control the time for heating and cooling

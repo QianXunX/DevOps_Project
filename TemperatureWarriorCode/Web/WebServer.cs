@@ -136,6 +136,11 @@ namespace TemperatureWarriorCode.Web {
                     return "Data is null";
                 }
 
+                if (temp_max.Length != temp_min.Length)
+                {
+                    return "The length of the arrays is different!";
+                }
+
                 for (int i = 0; i < temp_max.Length; i++)
                 {   
                     try{
@@ -154,6 +159,7 @@ namespace TemperatureWarriorCode.Web {
                     }catch(Exception e){
                         Console.WriteLine("Error en compareMaxMinValues");
                         Console.WriteLine(e);
+                        Console.WriteLine("Temp max: " + temp_max[i] + " Temp min: " + temp_min[i]);
                     }
                 }
             }catch(Exception e){
@@ -289,6 +295,21 @@ namespace TemperatureWarriorCode.Web {
                                         if (allCorrect && !string.Equals(pass, pass_temp)) {
                                             message = "Wrong PASSWORD!";
                                             allCorrect = false;
+                                        }
+
+                                        // check if temp_max, temp_min, round_time have the same length
+                                        if (allCorrect && temp_max_array.Length != temp_min_array.Length || temp_max_array.Length != round_time_array.Length || temp_min_array.Length != round_time_array.Length) {
+                                            message = "The length of the arrays is different!" + "Temp max: " + temp_max_array.Length + " Temp min: " + temp_min_array.Length + " Round time: " + round_time_array.Length;
+                                            allCorrect = false;
+                                        }
+
+                                        // Check if display_refresh and refresh are numbers
+                                        if (allCorrect) {
+                                            string output = refreshValueCheck(display_refresh_str);
+                                            if (output != "") {
+                                                message = "Incorrect value in DISPLAY REFRESH: " + output;
+                                                allCorrect = false;
+                                            }
                                         }
 
                                         string output = tempCheck(temp_max_array);
