@@ -304,15 +304,17 @@ namespace TemperatureWarriorCode.Web {
                                         }
 
                                         // Check if display_refresh and refresh are numbers
+                                        string output = refreshValueCheck(display_refresh_str);
+
                                         if (allCorrect) {
-                                            string output = refreshValueCheck(display_refresh_str);
+                                            output = refreshValueCheck(display_refresh_str);
                                             if (output != "") {
                                                 message = "Incorrect value in DISPLAY REFRESH: " + output;
                                                 allCorrect = false;
                                             }
                                         }
 
-                                        string output = tempCheck(temp_max_array);
+                                        output = tempCheck(temp_max_array);
                                         if(allCorrect && output != "") {
                                             message = "Incorrect value/s in TEMP MAX: " + output;
                                             allCorrect = false;
@@ -349,8 +351,8 @@ namespace TemperatureWarriorCode.Web {
 
 
                                         if (allCorrect){
-                                            Data.temp_max = temp_max_parts[1].Split(";");
-                                            Data.temp_min = temp_min_parts[1].Split(";");
+                                            Data.temp_max = temp_max_array;
+                                            Data.temp_min = temp_min_array;
                                             Data.display_refresh = int.Parse(display_refresh_str);
                                             Data.refresh = int.Parse(refresh_str);
                                             Data.round_time = round_time_array;
@@ -436,7 +438,7 @@ namespace TemperatureWarriorCode.Web {
             // Only show save and cooler mode in configuration mode and start round when we are ready
             string save = "<button type=\"button\" onclick='save()'>Guardar</button>";
             string temp = "<a href='#' class='btn btn-primary tm-btn-search' onclick='temp()'>Consultar Temperatura</a>";
-            string graph = "";
+            //string graph = "";
             string start = "";
 
             if (ready)

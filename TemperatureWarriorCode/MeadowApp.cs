@@ -116,8 +116,8 @@ namespace TemperatureWarriorCode
         AnalogTemperature sensor; // outdated
 
         //Display
-        St7789 display; //not used
-        MicroGraphics graphics;
+        //St7789 display; //not used
+        //MicroGraphics graphics;
 
 
         //Time Controller Values
@@ -312,6 +312,8 @@ namespace TemperatureWarriorCode
                 //define ranges
                 for (int i = 0; i < Data.temp_min.Length; i++)
                 {
+
+
                     Console.WriteLine(Data.temp_max[i]);
                     // Save all ranges to temperature Ranges
                     if (double.TryParse(Data.temp_min[i], out double tempMin) &&
@@ -324,8 +326,10 @@ namespace TemperatureWarriorCode
                     else
                     {
                         Console.WriteLine("Error parsing temperature ranges");
-                        Console.WriteLine("Array: " + Data.temp_max + Data.temp_min);
-                        Console.WriteLine(Data.temp_min[i], Data.temp_max[i], Data.round_time[i]);
+                        Console.WriteLine("Array: ");
+                        printArray(Data.temp_min);
+                        printArray(Data.temp_max);
+                        printArray(Data.round_time);
                         return;
                     }
                 }
@@ -433,7 +437,8 @@ namespace TemperatureWarriorCode
                 Console.WriteLine("Tiempo fuera del rango " + ((double)total_time_out_of_range / 1000) + " s de " + total_time + " s");
 
                 // Print the csv array
-                Console.WriteLine("CSV ARRAY " + Data.csv_count);
+                Console.WriteLine("::::::::::::::::::::CSV ARRAY:::::::::::::::::" );
+                printArray(Data.csv_count);
             }catch(Exception e)
             {
                 Console.WriteLine("Error in StartRound");
