@@ -152,7 +152,7 @@ namespace TemperatureWarriorCode
 
     public class MeadowApp : App<F7FeatherV2>
     {
-        private const int MovingAverageWindowSize = 10;
+        private const int MovingAverageWindowSize = 3;
         private readonly MovingAverage movingAverage = new MovingAverage(MovingAverageWindowSize);
 
         // Umbral para detectar valores atípicos (en número de desviaciones estándar)
@@ -205,9 +205,9 @@ namespace TemperatureWarriorCode
                 pid = new PidAlgo.PIDController(0.5, 0.2, 1);
 
                 // Temperature Sensor Configuration
-                sensor = new AnalogTemperature(analogPin: Device.Pins.A01, sensorType: AnalogTemperature.KnownSensorType.TMP36);
+                sensor = new AnalogTemperature(analogPin: Device.Pins.A03, sensorType: AnalogTemperature.KnownSensorType.TMP36);
                 sensor.TemperatureUpdated += AnalogTemperatureUpdated;
-                sensor.StartUpdating(TimeSpan.FromSeconds(0.5));
+                sensor.StartUpdating(TimeSpan.FromSeconds(0.3));
 
 
                 // TODO Local Network configuration (uncomment when needed)
@@ -577,6 +577,7 @@ namespace TemperatureWarriorCode
         void AnalogTemperatureUpdated(object sender, IChangeResult<Meadow.Units.Temperature> e)
         {
             double currentTemperature = e.New.Celsius;
+            Data.temp_act = Math.Round(currentTemperature, 2).ToString();
 
             // Obtener el promedio actual y la desviación estándar antes de añadir la nueva lectura
             double averageTemperature = movingAverage.GetAverage();
@@ -595,7 +596,7 @@ namespace TemperatureWarriorCode
             // Obtener el nuevo promedio suavizado
             double smoothedTemperature = movingAverage.GetAverage();
 
-            Data.temp_act = Math.Round(smoothedTemperature, 2).ToString();
+            //Data.temp_act = Math.Round(smoothedTemperature, 2).ToString();
             Console.WriteLine($"Temperature={Data.temp_act}");
         }
 
