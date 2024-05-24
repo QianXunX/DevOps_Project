@@ -9,8 +9,11 @@ public class PIDController
     private double Kd; // Coeficiente Derivativo
 
     private double integral;
-    private double lastError;
-    private DateTime lastUpdate;
+    private double previousError;
+    private DateTime lastUpdateTime;
+    private double outputMin = -1.0; // or the appropriate limit
+    private double outputMax = 1.0;  // or the appropriate limit
+
 
     // Constructor
     public PIDController(double kp, double ki, double kd)
@@ -19,34 +22,43 @@ public class PIDController
         this.Ki = ki;
         this.Kd = kd;
         this.integral = 0;
-        this.lastError = 0;
-        this.lastUpdate = DateTime.Now;
+        this.previousError = 0;
+        this.lastUpdateTime = DateTime.Now;
     }
 
     // Método para actualizar el control PID
-    public double Update(double setPoint, double actualValue)
+    public double Update(double currentValue, double setPoint)
     {
-        var now = DateTime.Now;
-        var timeChange = (now - lastUpdate).TotalSeconds;
+        double error = setPoint - currentValue;
+        DateTime now = DateTime.Now;
+        double deltaTime = (now - lastUpdateTime).TotalSeconds;
+        lastUpdateTime = now;
 
-        // Calculo del error
-        double error = setPoint - actualValue;
+        // Acumular el error considerando el tiempo
+        integral += error * deltaTime;
 
-        // Cálculo del término integral
-        integral += error * timeChange;
+        // Calcular la tasa de cambio del error considerando el tiempo
+        double derivative = (error - previousError) / deltaTime;
 
-        // Cálculo del término derivativo
-        double derivative = (error - lastError) / timeChange;
-
-        // Cálculo del valor de salida
+        // Calcular la salida del PID
         double output = Kp * error + Ki * integral + Kd * derivative;
 
-        // Actualizar variables para la próxima iteración
-        lastError = error;
-        lastUpdate = now;
+        // Anti-windup: Limitar la salida y ajustar la integral si es necesario
+        if (output > outputMax)
+        {
+            output = outputMax;
+            integral -= error * deltaTime;  // Restablecer término integral
+        }
+        else if (output < outputMin)
+        {
+            output = outputMin;
+            integral -= error * deltaTime;  // Restablecer término integral
+        }
 
+        previousError = error;
         return output;
+
+        }
     }
-}
 
 }
