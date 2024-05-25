@@ -3,7 +3,7 @@ using Meadow.Foundation;
 using Meadow.Foundation.Sensors.Temperature;
 using Meadow.Foundation.Graphics;
 using Meadow.Foundation.Displays;
-using Meadow.Devices;
+using Meadow.Devices;           
 using Meadow.Hardware;
 using Meadow.Gateway.WiFi;
 using Meadow.Units;
@@ -426,7 +426,10 @@ namespace TemperatureWarriorCode
 
                         // Setpoint calculation
                         double setPointWhenCurrAbove = temperatureRanges[i].MaxTemp;
+                        Data.temp_max_act = int.Parse(Data.temp_max[i]);
                         double setPointWhenCurrBelow = temperatureRanges[i].MinTemp;
+                        Data.temp_min_act = int.Parse(Data.temp_min[i]);
+
                         Stopwatch roundTimer = Stopwatch.StartNew(); // Temporizador para la ronda actual
                         while (roundTimer.ElapsedMilliseconds < temperatureRanges[i].RangeTimeInMilliseconds)
                         {

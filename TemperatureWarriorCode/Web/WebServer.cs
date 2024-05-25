@@ -393,7 +393,7 @@ namespace TemperatureWarriorCode.Web {
                         }
                     }
                     if (req.Url.AbsolutePath == "/temp") {
-                        message = $"La temperatura actual es {Data.temp_act}";
+                        message = $"Temp Actual: {Data.temp_act}ºC; Rango ºC: [{Data.temp_min_act} ºC, {Data.temp_max_act}ºC]; Tiempo en Rango: {Data.time_in_range_temp}; Tiempo Faltante: {Data.time_left}";
                     }
 
                     // Write the response info

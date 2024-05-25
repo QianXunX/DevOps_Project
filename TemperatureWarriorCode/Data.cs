@@ -15,6 +15,9 @@ namespace TemperatureWarriorCode {
         public static int refresh = 100; // In ms
         public static String[] round_time = { "10" }; // in s
 
+        public static int temp_max_act = 0; // In ºC
+        public static int temp_min_act = 0; // In ºC
+
         // MODE VARIABLES
         public static bool not_set_sensor_refresh = true;
 
