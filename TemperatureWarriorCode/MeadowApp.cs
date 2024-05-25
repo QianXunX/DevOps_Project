@@ -24,6 +24,9 @@ using PidAlgo;
 using System.Dynamic;
 using System.Security.Cryptography;
 
+using System.IO;
+using System.Text;
+
 namespace TemperatureWarriorCode
 {
     public class Fan
@@ -159,7 +162,7 @@ namespace TemperatureWarriorCode
         private const double OutlierThreshold = 7.0;
 
         //Temperature Sensor
-        AnalogTemperature sensor; // outdated
+        public static AnalogTemperature sensor; // outdated
 
         //Display
         //St7789 display; //not used
@@ -202,12 +205,12 @@ namespace TemperatureWarriorCode
                 peltier = new Peltier(Device, Device.Pins.D14);
 
                 // Create the PID controller
-                pid = new PidAlgo.PIDController(0.5, 0.2, 1);
+                pid = new PidAlgo.PIDController(0.5, 0.2, 0.5);
 
                 // Temperature Sensor Configuration
-                sensor = new AnalogTemperature(analogPin: Device.Pins.A03, sensorType: AnalogTemperature.KnownSensorType.TMP36);
+                sensor = new AnalogTemperature(analogPin: Device.Pins.A03, sensorType: AnalogTemperature.KnownSensorType.TMP36, sampleCount: 10);
                 sensor.TemperatureUpdated += AnalogTemperatureUpdated;
-                sensor.StartUpdating(TimeSpan.FromSeconds(0.3));
+                sensor.StartUpdating(TimeSpan.FromSeconds(1));
 
 
                 // TODO Local Network configuration (uncomment when needed)
@@ -330,15 +333,39 @@ namespace TemperatureWarriorCode
             Console.WriteLine(result);
         }
 
+        public static void UpdateSensorRefreshRate(int refreshRateInMilliseconds)
+        {
+            TimeSpan newInterval = TimeSpan.FromMilliseconds(refreshRateInMilliseconds);
+            sensor.StopUpdating(); // Detiene la actualización actual
+            sensor.StartUpdating(newInterval); // Inicia la actualización con el nuevo intervalo
+            Console.WriteLine($"Sensor refresh rate updated to {newInterval.TotalMilliseconds} milliseconds.");
+        }
+
+        // Método para guardar los valores en un archivo CSV
+        // Método para guardar los valores en un archivo CSV
+        public static void SaveToCsv(string[] values, string filePath)
+        {
+            StringBuilder csvContent = new StringBuilder();
+
+            foreach (var value in values)
+            {
+                csvContent.AppendLine(value);
+            }
+
+            File.WriteAllText(filePath, csvContent.ToString());
+        }
+
         //TW Combat Round
         public static void StartRound()
         {
             try
             {
 
+                UpdateSensorRefreshRate(Data.refresh);
+
                 Console.WriteLine("Datas ==================================================");
-                printArray(Data.temp_max);
                 printArray(Data.temp_min);
+                printArray(Data.temp_max);
                 printArray(Data.round_time);
                 Console.WriteLine("==================================================");
 
@@ -406,18 +433,26 @@ namespace TemperatureWarriorCode
 
                 t.Start();
 
+                // Inicialización del cronómetro
+                Stopwatch stopwatch = new Stopwatch();
                 Stopwatch regTempTimer = new Stopwatch();
-                timeController.StartOperation(); // aquí se inicia el conteo en la librería de control
-                regTempTimer.Start();
 
-                Console.WriteLine("STARTING ROUND ==================================================");
                 bool emergencyError = false;
 
                 //THE TW (Temperature Warrior) START WORKING
                 while (Data.is_working)
                 {
+                    timeController.StartOperation(); // aquí se inicia el conteo en la librería de control
+                    regTempTimer.Start();
+                    Console.WriteLine("STARTING ROUND/S ==================================================");
+
+
                     for (int i = 0; i < temperatureRanges.Length; i++)
-                    {   
+                    {
+                        // CONTADOR DE TIEMPO DE RANGO
+
+                        stopwatch.Start();
+
                         // Initializing round
                         Console.WriteLine("Starting round " + i);
                         Console.WriteLine("Max temp: " + temperatureRanges[i].MaxTemp);
@@ -430,15 +465,17 @@ namespace TemperatureWarriorCode
                         double setPointWhenCurrBelow = temperatureRanges[i].MinTemp;
                         Data.temp_min_act = int.Parse(Data.temp_min[i]);
 
+                        // set both setpoints to the same value being the middle of the range, above + below / 2
+                        double setPoint = (setPointWhenCurrAbove + setPointWhenCurrBelow) / 2;
+
                         Stopwatch roundTimer = Stopwatch.StartNew(); // Temporizador para la ronda actual
-                        while (roundTimer.ElapsedMilliseconds < temperatureRanges[i].RangeTimeInMilliseconds)
+                        while (roundTimer.ElapsedMilliseconds < (temperatureRanges[i].RangeTimeInMilliseconds))  
                         {
                             if (double.TryParse(Data.temp_act, out double currentTemp))
                             {
 
                                 if (currentTemp > 50)
                                 {   
-
                                     Console.WriteLine("OVER 50ºC");
                                     fan.TurnOff();
                                     heatGun.TurnOff();
@@ -449,6 +486,27 @@ namespace TemperatureWarriorCode
                                 // Calculate pid output
                                 double pidOutput;
 
+                                // use only setpoint and current temperature to calculate pid output
+                                pidOutput = pid.Update(currentTemp, setPoint);
+                                if (pidOutput > 0)
+                                {
+                                 // Turn on peltier
+                                    Console.WriteLine("Turning on peltier");
+                                    peltier.TurnOn();
+                                    heatGun.TurnOff();
+                                } else if (pidOutput < 0) {
+                                    // Turn on heat gun
+                                    Console.WriteLine("Turning on heat gun");
+                                    peltier.TurnOff();
+                                    heatGun.TurnOn();
+                                } else {
+                                    // Turn off peltier and heat gun
+                                    Console.WriteLine("Turning off peltier and heat gun");
+                                    peltier.TurnOff();
+                                    heatGun.TurnOff();
+
+                                }
+                                /*
                                 if (currentTemp > setPointWhenCurrAbove)
                                 {
                                     pidOutput  = pid.Update(currentTemp, setPointWhenCurrAbove);
@@ -492,7 +550,11 @@ namespace TemperatureWarriorCode
                                     Data.temp_values = AppendToArray(Data.temp_values, currentTemp.ToString());
                                     Data.pid_values = AppendToArray(Data.pid_values, 0.ToString());
 
-                                }
+                                }*/
+
+                                // Save the current temperature to the csv array
+                                Data.temp_values = AppendToArray(Data.temp_values, currentTemp.ToString());
+                                Data.pid_values = AppendToArray(Data.pid_values, pidOutput.ToString());
 
 
                             }
@@ -500,6 +562,13 @@ namespace TemperatureWarriorCode
                             {
                                 Console.WriteLine("Error parsing temperature" + Data.temp_act);
                             }
+                            stopwatch.Stop();
+                            sleep_time = (int)stopwatch.ElapsedMilliseconds;
+                            if (sleep_time > Data.refresh)
+                            {
+                                sleep_time = Data.refresh;
+                            }
+                            stopwatch.Restart();
                             // PUNTO X
                             Thread.Sleep(Data.refresh - sleep_time);
                         }
@@ -536,8 +605,15 @@ namespace TemperatureWarriorCode
                 Console.WriteLine("::::::::::::::::::::CSV ARRAY:::::::::::::::::" );
                 printArray(Data.temp_values);
                 printArray(Data.pid_values);
+                        // Guardar en un archivo CSV
+                string tempFilePath = "temperatures_values.csv";
+                SaveToCsv(Data.temp_values, tempFilePath);
+                string pidFilePath = "pid_values.csv";
+                SaveToCsv(Data.pid_values, pidFilePath);
 
-            }catch(Exception e)
+
+            }
+            catch (Exception e)
             {
                 Console.WriteLine("Error in StartRound");
                 Console.WriteLine(e);
@@ -579,7 +655,16 @@ namespace TemperatureWarriorCode
         //Temperature and Display Updated
         void AnalogTemperatureUpdated(object sender, IChangeResult<Meadow.Units.Temperature> e)
         {
-            double currentTemperature = e.New.Celsius;
+            double currentTemperature;
+            try
+            {
+                currentTemperature = e.New.Celsius;
+            }catch(Exception ex)
+            {
+                Console.WriteLine("Error in AnalogTemperatureUpdated");
+                Console.WriteLine(ex);
+                currentTemperature = 18;
+            }
             Data.temp_act = Math.Round(currentTemperature, 2).ToString();
 
             // Obtener el promedio actual y la desviación estándar antes de añadir la nueva lectura
