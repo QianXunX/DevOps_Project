@@ -527,9 +527,6 @@ namespace TemperatureWarriorCode.Web {
                             "<div class='container'>" +
                             "<div class='row'>" +
                             "<nav class='navbar navbar-expand-lg narbar-light'>" +
-                            "<a class='navbar-brand mr-auto' href='#'>" +
-                            "<img id='logo' class='logo' src='http://127.0.0.1:8887/img/6.webp' alt='Site logo' width='700' height='300'>" +
-                            "</a>" +
                             "</nav>" +
                             "</div>" +
                             "</div>" +

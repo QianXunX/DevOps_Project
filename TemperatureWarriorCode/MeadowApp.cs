@@ -219,7 +219,7 @@ namespace TemperatureWarriorCode
                 pid = new PidAlgo.PIDController(1.2, 0.001, 0.01);
 
                 // Temperature Sensor Configuration
-                sensor = new AnalogTemperature(analogPin: Device.Pins.A03, sensorType: AnalogTemperature.KnownSensorType.TMP36, sampleCount: 10);
+                sensor = new AnalogTemperature(analogPin: Device.Pins.A03, sensorType: AnalogTemperature.KnownSensorType.TMP36);
                 sensor.TemperatureUpdated += AnalogTemperatureUpdated;
                 sensor.StartUpdating(TimeSpan.FromSeconds(1));
 
@@ -367,7 +367,8 @@ namespace TemperatureWarriorCode
 
                 // Inicialización del cronómetro
                 Stopwatch stopwatch = new Stopwatch();
-                Stopwatch regTempTimer = new Stopwatch();
+                //Stopwatch regTempTimer = new Stopwatch();
+                //Stopwatch sleep = new Stopwatch();
 
                 bool emergencyError = false;
                 int run_once = 0;
@@ -380,7 +381,8 @@ namespace TemperatureWarriorCode
                     }
                     run_once++;
                     timeController.StartOperation(); // aquí se inicia el conteo en la librería de control
-                    regTempTimer.Start();
+                    //regTempTimer.Start();
+                    //sleep.Start();
                     Console.WriteLine("STARTING ROUND/S ==================================================");
 
                     int timeInRangeAccumulated = 0;
@@ -412,10 +414,12 @@ namespace TemperatureWarriorCode
                         Stopwatch roundTimer = Stopwatch.StartNew(); // Temporizador para la ronda actual
                         while (roundTimer.ElapsedMilliseconds < (temperatureRanges[i].RangeTimeInMilliseconds))  
                         {
+                            String decision = "none";
+                            double pidOutput = 0;
+
                             if (double.TryParse(Data.temp_act, out double currentTemp))
                             {
-
-                                stopwatch.Restart();
+                                currentTemp = Math.Round(currentTemp, 1);
 
                                 if (currentTemp > 55)
                                 {   
@@ -427,31 +431,31 @@ namespace TemperatureWarriorCode
                                     break;
                                 }
                                 // Calculate pid output
-                                double pidOutput;
-
                                 // use only setpoint and current temperature to calculate pid output
                                 pidOutput = pid.Update(currentTemp, setPoint);
                                 if (pidOutput > 1)
                                 {
                                  // Turn on peltier
-                                    Console.WriteLine("ON P: " + pidOutput);
+                                    decision = "H";
                                     peltier.TurnOff();
                                     heatGun.TurnOn();
                                 } else if (pidOutput < -1) {
                                     // Turn on heat gun
-                                    Console.WriteLine("ON H: " + pidOutput);
+                                    decision = "P";
                                     peltier.TurnOn();
                                     heatGun.TurnOff();
                                 } else {
                                     // Turn off peltier and heat gun
-                                    Console.WriteLine("OFF P & H: " + pidOutput);
+                                    decision = "N";
                                     peltier.TurnOff();
                                     heatGun.TurnOff();
 
                                 }
+
+                                
                                 // Save the current temperature to the csv array
-                                Data.temp_values = AppendToArray(Data.temp_values, currentTemp.ToString());
-                                Data.pid_values = AppendToArray(Data.pid_values, pidOutput.ToString());
+                                // Data.temp_values = AppendToArray(Data.temp_values, currentTemp.ToString());
+                                // Data.pid_values = AppendToArray(Data.pid_values, pidOutput.ToString());
 
                                 timeController.RegisterTemperature(double.Parse(Data.temp_act));
 
@@ -460,14 +464,23 @@ namespace TemperatureWarriorCode
                             {
                                 Console.WriteLine("Error parsing temperature" + Data.temp_act);
                             }
-
+                            //Console.WriteLine(stopwatch.ElapsedMilliseconds.ToString() + " + " + sleep.ElapsedMilliseconds.ToString() + " = " + (stopwatch.ElapsedMilliseconds+sleep.ElapsedMilliseconds));
                             stopwatch.Stop();
                             sleep_time = (int)stopwatch.ElapsedMilliseconds;
+                            
                             if (sleep_time > Data.refresh)
                             {
                                 sleep_time = Data.refresh;
                             }
+
+                            //sleep.Restart();
+
+
                             Thread.Sleep(Data.refresh - sleep_time);
+                            //sleep.Stop();
+
+                            stopwatch.Restart();
+
                         }
 
                         // FINISH ROUND
@@ -478,10 +491,12 @@ namespace TemperatureWarriorCode
                         total_time_out_of_range += timeController.TimeOutOfRangeInMilliseconds;
                         Data.time_in_range_temp = (timeController.TimeInRangeInMilliseconds / 1000);
                         String rangeTimeString = Math.Round((double)temperatureRanges[i].RangeTimeInMilliseconds, 1).ToString();
+                        String timeInRangeSeconds = Math.Round((double)timeInRangeCurrent / 1000, 1).ToString();
+                        String timeOutOfRangeSeconds = Math.Round((double)temperatureRanges[i].RangeTimeInMilliseconds - timeInRangeCurrent, 1).ToString();
 
                         Console.WriteLine("::::::::::::::::::::RESULTS OF ROUND:::::::::::::::::");
-                        Console.WriteLine("Tiempo dentro del rango " + (((double)timeController.TimeInRangeInMilliseconds / 1000, 1) + " s de " + rangeTimeString + " s");
-                        Console.WriteLine("Tiempo fuera del rango " + ((double)total_time_out_of_range / 1000, 1) + " s de " + rangeTimeString + " s");
+                        Console.WriteLine("Tiempo dentro del rango " + timeInRangeSeconds + " s de " + rangeTimeString + " s");
+                        Console.WriteLine("Tiempo fuera del rango " + timeOutOfRangeSeconds + " s de " + rangeTimeString + " s");
 
 
                         //regTempTimer.Restart();
@@ -582,27 +597,7 @@ namespace TemperatureWarriorCode
                 currentTemperature = 18;
             }
             Data.temp_act = Math.Round(currentTemperature, 1).ToString();
-            /*
-            // Obtener el promedio actual y la desviación estándar antes de añadir la nueva lectura
-            double averageTemperature = movingAverage.GetAverage();
-            double standardDeviation = movingAverage.GetStandardDeviation();
-
-            // Detectar si la nueva lectura es un valor atípico
-            if (Math.Abs(currentTemperature - averageTemperature) > OutlierThreshold * standardDeviation && standardDeviation > 0)
-            {
-                // Reemplazar el valor atípico con el promedio
-                currentTemperature = averageTemperature;
-            }
-
-            // Añadir la nueva lectura (o el valor corregido) al buffer
-            movingAverage.AddSample(currentTemperature);
-
-            // Obtener el nuevo promedio suavizado
-            double smoothedTemperature = movingAverage.GetAverage();
-            */
-
-            //Data.temp_act = Math.Round(smoothedTemperature, 2).ToString();
-            Console.WriteLine($"Temperature={Data.temp_act}");
+            //Console.WriteLine($"Temperature={Data.temp_act}");
         }
 
         void WiFiAdapter_WiFiConnected(object sender, EventArgs e)
