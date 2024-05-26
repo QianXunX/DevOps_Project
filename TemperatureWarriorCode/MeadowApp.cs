@@ -318,7 +318,6 @@ namespace TemperatureWarriorCode
                 //Range configurations
                 bool success;
                 string error_message = null;
-                Data.is_working = true;
 
                 //define ranges
                 for (int i = 0; i < Data.temp_min.Length; i++)
@@ -415,6 +414,12 @@ namespace TemperatureWarriorCode
                         Stopwatch roundTimer = Stopwatch.StartNew(); // Temporizador para la ronda actual
                         while (roundTimer.ElapsedMilliseconds < (temperatureRanges[i].RangeTimeInMilliseconds))  
                         {
+                            if (Data.is_working == false)
+                            {
+
+                                break;
+                            }
+
                             String decision = "none";
                             double pidOutput = 0;
 
@@ -481,6 +486,10 @@ namespace TemperatureWarriorCode
                             stopwatch.Restart();
 
                         }
+                        if (Data.is_working == false)
+                        {
+                            break;
+                        }
 
                         // FINISH ROUND
 
@@ -540,7 +549,6 @@ namespace TemperatureWarriorCode
                 string pidFilePath = "pid_values.csv";
                 // SaveToCsv(Data.pid_values, pidFilePath);
 
-                Data.is_working = false;
                 Data.number_of_instances --;
             }
             catch (Exception e)
