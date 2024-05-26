@@ -368,7 +368,6 @@ namespace TemperatureWarriorCode
                 // Inicialización del cronómetro
                 Stopwatch stopwatch = new Stopwatch();
                 //Stopwatch regTempTimer = new Stopwatch();
-                //Stopwatch sleep = new Stopwatch();
 
                 bool emergencyError = false;
                 int run_once = 0;
@@ -382,7 +381,9 @@ namespace TemperatureWarriorCode
                     run_once++;
                     timeController.StartOperation(); // aquí se inicia el conteo en la librería de control
                     //regTempTimer.Start();
-                    //sleep.Start();
+                    Stopwatch sleep = new Stopwatch();
+
+                    sleep.Start();
                     Console.WriteLine("STARTING ROUND/S ==================================================");
 
                     int timeInRangeAccumulated = 0;
@@ -430,8 +431,12 @@ namespace TemperatureWarriorCode
                                     emergencyError = true;
                                     break;
                                 }
+
+                                timeController.RegisterTemperature(currentTemp);
+
                                 // Calculate pid output
                                 // use only setpoint and current temperature to calculate pid output
+
                                 pidOutput = pid.Update(currentTemp, setPoint);
                                 if (pidOutput > 1)
                                 {
@@ -451,20 +456,14 @@ namespace TemperatureWarriorCode
                                     heatGun.TurnOff();
 
                                 }
-
-                                
-                                // Save the current temperature to the csv array
-                                // Data.temp_values = AppendToArray(Data.temp_values, currentTemp.ToString());
-                                // Data.pid_values = AppendToArray(Data.pid_values, pidOutput.ToString());
-
-                                timeController.RegisterTemperature(double.Parse(Data.temp_act));
-
+                                Console.WriteLine(currentTemp + " :: " + Math.Round(pidOutput, 2) + " :: " + decision);
+                                Console.WriteLine(stopwatch.ElapsedMilliseconds.ToString() + " + " + sleep.ElapsedMilliseconds.ToString() + " = " + (stopwatch.ElapsedMilliseconds + sleep.ElapsedMilliseconds));
                             }
                             else
                             {
                                 Console.WriteLine("Error parsing temperature" + Data.temp_act);
                             }
-                            //Console.WriteLine(stopwatch.ElapsedMilliseconds.ToString() + " + " + sleep.ElapsedMilliseconds.ToString() + " = " + (stopwatch.ElapsedMilliseconds+sleep.ElapsedMilliseconds));
+                            
                             stopwatch.Stop();
                             sleep_time = (int)stopwatch.ElapsedMilliseconds;
                             
@@ -473,11 +472,11 @@ namespace TemperatureWarriorCode
                                 sleep_time = Data.refresh;
                             }
 
-                            //sleep.Restart();
+                            sleep.Restart();
 
 
                             Thread.Sleep(Data.refresh - sleep_time);
-                            //sleep.Stop();
+                            sleep.Stop();
 
                             stopwatch.Restart();
 
@@ -490,9 +489,9 @@ namespace TemperatureWarriorCode
                         timeInRangeAccumulated = timeController.TimeInRangeInMilliseconds;
                         total_time_out_of_range += timeController.TimeOutOfRangeInMilliseconds;
                         Data.time_in_range_temp = (timeController.TimeInRangeInMilliseconds / 1000);
-                        String rangeTimeString = Math.Round((double)temperatureRanges[i].RangeTimeInMilliseconds, 1).ToString();
+                        String rangeTimeString = Math.Round((double)temperatureRanges[i].RangeTimeInMilliseconds/1000, 1).ToString();
                         String timeInRangeSeconds = Math.Round((double)timeInRangeCurrent / 1000, 1).ToString();
-                        String timeOutOfRangeSeconds = Math.Round((double)temperatureRanges[i].RangeTimeInMilliseconds - timeInRangeCurrent, 1).ToString();
+                        String timeOutOfRangeSeconds = Math.Round((double)(temperatureRanges[i].RangeTimeInMilliseconds - timeInRangeCurrent)/1000, 1).ToString();
 
                         Console.WriteLine("::::::::::::::::::::RESULTS OF ROUND:::::::::::::::::");
                         Console.WriteLine("Tiempo dentro del rango " + timeInRangeSeconds + " s de " + rangeTimeString + " s");
