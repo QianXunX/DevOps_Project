@@ -9,14 +9,16 @@ namespace TemperatureWarriorCode {
         public static int Port = 2550;
 
         //ROUND VARIABLES
-        public static string[] temp_max = { "20" }; // In ºC
-        public static String[] temp_min = { "15" }; // In ºC
+        public static string[] temp_max = { "14; 30; 20" }; // In ºC
+        public static String[] temp_min = { "12; 28; 19" }; // In ºC
         public static int display_refresh = 100; // In ms
-        public static int refresh = 5000; // In ms
-        public static String[] round_time = { "30" }; // in s
+        public static int refresh = 100; // In ms
+        public static String[] round_time = { "30; 30; 30" }; // in s
 
         public static int temp_max_act = 0; // In ºC
         public static int temp_min_act = 0; // In ºC
+        public static int current_round = 0; // In s
+        public static int number_of_instances = 0; // In s
 
         // MODE VARIABLES
         public static bool not_set_sensor_refresh = true;

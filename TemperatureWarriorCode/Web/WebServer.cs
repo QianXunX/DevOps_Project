@@ -8,6 +8,8 @@ using System.Threading;
 using System.Text.Json;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
+using System.Collections.Generic;
+
 
 namespace TemperatureWarriorCode.Web {
     public class WebServer {
@@ -78,20 +80,35 @@ namespace TemperatureWarriorCode.Web {
         }
 
         public static string[] trimAndRemoveEmpty(string[] data) {
-            if (data == null) {
-                return data;
+            if (data == null)
+            {
+                return new string[0]; // Devolver un array vacío si los datos son nulos
             }
-            
+
             List<string> cleanedData = new List<string>();
-            
-            foreach (string item in data) {
-                string trimmedItem = item.Trim();
-                if (!string.IsNullOrWhiteSpace(trimmedItem)) {
-                    cleanedData.Add(trimmedItem);
+
+            foreach (string item in data)
+            {
+                // Decodificar la cadena primero
+                string decodedItem = Uri.UnescapeDataString(item);
+                string trimmedItem = decodedItem.Trim();
+
+                if (!string.IsNullOrWhiteSpace(trimmedItem))
+                {
+                    // Verificar si el elemento es un número válido
+                    if (int.TryParse(trimmedItem, out _))
+                    {
+                        cleanedData.Add(trimmedItem);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"No es un número válido: {trimmedItem}");
+                    }
                 }
             }
-            
+
             return cleanedData.ToArray();
+
         }
 
         // Checks if the string contains only numbers
@@ -115,7 +132,7 @@ namespace TemperatureWarriorCode.Web {
                     return "Empty value"; // empty value
                 }else if (!isAllNumbers(item))
                 {
-                    return "Not a number: " + item; // not a number
+                    return "Not a number: " + item + "; Array: " + printArray(data); // not a number
                 }else if (int.Parse(item) < 12 || int.Parse(item) > 30)
                 {
                     return "Out of range: " + item; // out of range
@@ -123,6 +140,12 @@ namespace TemperatureWarriorCode.Web {
                 
             }
             return ""; // all correct
+        }
+        static string printArray(string[] array)
+        {
+            string result = "[" + string.Join(", ", array) + "]";
+            Console.WriteLine(result);
+            return result;
         }
 
         // check if elements in array temp_max are greater than elements in array temp_min

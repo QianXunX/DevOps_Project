@@ -11,8 +11,8 @@ public class PIDController
     private double integral;
     private double previousError;
     private DateTime lastUpdateTime;
-    private double outputMin = -1.0; // or the appropriate limit
-    private double outputMax = 1.0;  // or the appropriate limit
+    private double outputMin = -100.0; // or the appropriate limit
+    private double outputMax = 100; // or the appropriate limit
 
 
     // Constructor
