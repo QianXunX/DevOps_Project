@@ -378,7 +378,6 @@ namespace TemperatureWarriorCode
                         break;
                     }
                     run_once++;
-                    timeController.StartOperation(); // aquí se inicia el conteo en la librería de control
                     //regTempTimer.Start();
                     Stopwatch sleep = new Stopwatch();
 
@@ -386,6 +385,7 @@ namespace TemperatureWarriorCode
                     Console.WriteLine("STARTING ROUND/S ==================================================");
 
                     int timeInRangeAccumulated = 0;
+                    timeController.StartOperation(); // aquí se inicia el conteo en la librería de control
 
                     for (int i = 0; i < temperatureRanges.Length; i++)
                     {
@@ -462,7 +462,7 @@ namespace TemperatureWarriorCode
 
                                 }
                                 Console.WriteLine(currentTemp + " :: " + Math.Round(pidOutput, 2) + " :: " + decision);
-                                Console.WriteLine(stopwatch.ElapsedMilliseconds.ToString() + " + " + sleep.ElapsedMilliseconds.ToString() + " = " + (stopwatch.ElapsedMilliseconds + sleep.ElapsedMilliseconds));
+                                //Console.WriteLine(stopwatch.ElapsedMilliseconds.ToString() + " + " + sleep.ElapsedMilliseconds.ToString() + " = " + (stopwatch.ElapsedMilliseconds + sleep.ElapsedMilliseconds));
                             }
                             else
                             {
@@ -496,7 +496,6 @@ namespace TemperatureWarriorCode
                         // MEDICION TIEMPO EN RANGO
                         int timeInRangeCurrent = timeController.TimeInRangeInMilliseconds - timeInRangeAccumulated;
                         timeInRangeAccumulated = timeController.TimeInRangeInMilliseconds;
-                        total_time_out_of_range += timeController.TimeOutOfRangeInMilliseconds;
                         Data.time_in_range_temp = (timeController.TimeInRangeInMilliseconds / 1000);
                         String rangeTimeString = Math.Round((double)temperatureRanges[i].RangeTimeInMilliseconds/1000, 1).ToString();
                         String timeInRangeSeconds = Math.Round((double)timeInRangeCurrent / 1000, 1).ToString();
@@ -525,10 +524,10 @@ namespace TemperatureWarriorCode
                 Console.WriteLine("::::::::::::::::::::RESULTS:::::::::::::::::");
 
                 Console.WriteLine("Tiempo total " + total_time + " s");
-                Console.WriteLine("Tiempo en rango " + ((double)timeController.TimeInRangeInMilliseconds / 1000) + " s de " + total_time + " s");
+                Console.WriteLine("Tiempo en rango " + (Math.Round((double)timeController.TimeInRangeInMilliseconds / 1000, 1)) + " s de " + total_time + " s");
 
-                Console.WriteLine("Tiempo dentro del rango " + (((double)timeController.TimeInRangeInMilliseconds / 1000)) + " s de " + total_time + " s");
-                Console.WriteLine("Tiempo fuera del rango " + ((double)total_time_out_of_range / 1000) + " s de " + total_time + " s");
+                Console.WriteLine("Tiempo dentro del rango " + Math.Round((double)timeController.TimeInRangeInMilliseconds / 1000, 1) + " s de " + total_time + " s");
+                Console.WriteLine("Tiempo fuera del rango " + Math.Round((double)timeController.TimeOutOfRangeInMilliseconds / 1000, 1) + " s de " + total_time + " s");
 
 
                 peltier.TurnOff();
@@ -537,17 +536,6 @@ namespace TemperatureWarriorCode
                 Console.WriteLine("Round Finish");
                 t.Abort();
 
-                total_time_in_range += timeController.TimeInRangeInMilliseconds;
-
-                // Print the csv array
-                Console.WriteLine("::::::::::::::::::::CSV ARRAY:::::::::::::::::" );
-                printArray(Data.temp_values);
-                printArray(Data.pid_values);
-                // Guardar en un archivo CSV
-                string tempFilePath = "temperatures_values.csv";
-                // SaveToCsv(Data.temp_values, tempFilePath);
-                string pidFilePath = "pid_values.csv";
-                // SaveToCsv(Data.pid_values, pidFilePath);
 
                 Data.number_of_instances --;
             }

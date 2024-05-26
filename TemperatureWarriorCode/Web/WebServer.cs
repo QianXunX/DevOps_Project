@@ -8,7 +8,6 @@ using System.Threading;
 using System.Text.Json;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
-using System.Collections.Generic;
 
 
 namespace TemperatureWarriorCode.Web {
@@ -75,7 +74,7 @@ namespace TemperatureWarriorCode.Web {
             listener.Close();
         }
 
-        public async void Stop() {
+        public void Stop() {
             _runServer = false;
         }
 
@@ -402,6 +401,11 @@ namespace TemperatureWarriorCode.Web {
                             // Start the round
                             Thread ronda = new Thread(MeadowApp.StartRound);
                             ronda.Start();
+                            
+                            while (!Data.is_working)
+                            {
+                                Thread.Sleep(100);
+                            }
 
                             // Wait for the round to finish
                             while (Data.is_working) {
@@ -470,11 +474,7 @@ namespace TemperatureWarriorCode.Web {
                 start = "<button type=\"button\" onclick='start()'>Comenzar Ronda</button>";
 
             }
-            /*string start = "";
-            if (ready)
-            {
-                start = "<button type=\"button\" onclick='start()'>Comenzar Ronda</button>";
-            }*/
+
             if (Data.is_working)
             {
                 start = "";
