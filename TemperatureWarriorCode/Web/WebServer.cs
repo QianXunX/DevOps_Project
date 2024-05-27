@@ -686,13 +686,16 @@ namespace TemperatureWarriorCode.Web {
 
                             "<script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.8.0/chart.js'> </script>" +
                             "<script>" +
+                            "function fetchTemp() {{location.href = '/temp';}}" +
+                            "setInterval(fetchTemp, 5000);" +
+                            /*
                             "async function fetchStatus() {{try{{" +
-                            "const response = await fetch('/status');" +
+                            "const response = await fetch('/temp');" +
                             "const data = await response.json();" +
                             "console.log(data);" +  
-                            "console.log(document.getElementById('status'));" +
-                            "document.getElementById('status').innerText = 'TempActual: ${{ data.TempActual}};'" +
-                            "}}catch (error){{console.error('Error fetching status', error);}}}} setInterval(fetchStatus, 5000)" + // Polling cada 5 segundos
+                            //"console.log(document.getElementById('status'));" +
+                            //"document.getElementById('status').innerText = 'TempActual: ${{ data.TempActual}};'" +
+                            "}}catch (error){{console.error('Error fetching status', error);}}}} setInterval(fetchStatus, 5000)" + // Polling cada 5 segundos*/
                             "</script>" +
             "</head>" +
             "<body>" +
