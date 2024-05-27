@@ -17,8 +17,11 @@ namespace TemperatureWarriorCode {
 
         public static int temp_max_act = 0; // In ºC
         public static int temp_min_act = 0; // In ºC
-        public static int current_round = 0; // In s
+        public static int current_round = 0;
+        public static double current_round_time_in_range = 0; // In s
         public static int number_of_instances = 0; // In s
+        public static int total_time_s = 0; // In ms
+        public static bool is_combat_finished = false;
 
         // MODE VARIABLES
         public static bool not_set_sensor_refresh = true;
