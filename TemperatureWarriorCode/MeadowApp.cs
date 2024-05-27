@@ -399,6 +399,8 @@ namespace TemperatureWarriorCode
                 Data.current_round = 1;
                 // Stopwatches to measure time left for all rounds
                 Stopwatch combatTimer = Stopwatch.StartNew();
+                
+
                 t.Start();
     
                 for (int i = 0; i < temperatureRanges.Length; i++)
@@ -424,6 +426,7 @@ namespace TemperatureWarriorCode
 
 
 
+                    double currentTemp = 0;
 
                     Stopwatch roundTimer = Stopwatch.StartNew(); // Temporizador para la ronda actual
                     Data.currentRoundTime = temperatureRanges[i].RangeTimeInMilliseconds;
@@ -437,11 +440,13 @@ namespace TemperatureWarriorCode
                             break;
                         }
 
-                        if (double.TryParse(Data.temp_act, out double currentTemp))
+                        Data.lastTemperature = currentTemp;
+
+                        if (double.TryParse(Data.temp_act, out  currentTemp))
                         {
                             currentTemp = Math.Round(currentTemp, 1);
-
-                            if (currentTemp > 55)
+                            Console.WriteLine(currentTemp + " :: " + Data.lastTemperature);
+                            if (currentTemp > 55 && (currentTemp-Data.lastTemperature < 10))
                             {   
                                 Console.WriteLine("OVER 55ºC");
                                 fan.TurnOff();
@@ -478,7 +483,7 @@ namespace TemperatureWarriorCode
                                 heatGun.TurnOff();
 
                             }
-                            //Console.WriteLine(currentTemp + " :: " + Math.Round(pidOutput, 2) + " :: " + decision);
+                            Console.WriteLine(currentTemp + " :: " + Math.Round(pidOutput, 2) + " :: " + decision);
                             //Console.WriteLine(stopwatch.ElapsedMilliseconds.ToString() + " + " + sleep.ElapsedMilliseconds.ToString() + " = " + (stopwatch.ElapsedMilliseconds + sleep.ElapsedMilliseconds));
                         }
                         else
@@ -610,6 +615,7 @@ namespace TemperatureWarriorCode
         //Temperature and Display Updated
         void AnalogTemperatureUpdated(object sender, IChangeResult<Meadow.Units.Temperature> e)
         {
+
             double currentTemperature;
             try
             {
@@ -620,6 +626,7 @@ namespace TemperatureWarriorCode
                 Console.WriteLine(ex);
                 currentTemperature = 18;
             }
+
             Data.temp_act = Math.Round(currentTemperature, 1).ToString();
             //Console.WriteLine($"Temperature={Data.temp_act}");
         }

@@ -580,8 +580,9 @@ namespace TemperatureWarriorCode.Web {
                     }
                     if (req.Url.AbsolutePath == "/temp")
                     {
+
                         message = $"Temp Actual: {Data.temp_act}ºC; Rango ºC: [{Data.temp_min_act} ºC, {Data.temp_max_act}ºC];\n" +
-                        $"Tiempo Total en Rango / Total Combate: {Math.Round((double) Data.time_in_range_temp / 1000, 1)} / {Data.total_time_s};\n" +
+                        $"Tiempo Total en Rango / Total Combate: {Math.Round((double) Data.time_in_range_temp, 1)} / {Data.total_time_s};\n" +
                         $"Tiempo Faltante Ronda / Total Ronda: {Math.Round((double) Data.remainRoundTime / 1000, 1)} / {Math.Round((double) Data.currentRoundTime / 1000, 1)};\n" +
                         $"Tiempo Faltante Combate / Total Combate: {Math.Round((double) Data.remainTotalTime / 1000, 1)} / {Data.total_time_s}";
 ;
@@ -687,7 +688,7 @@ namespace TemperatureWarriorCode.Web {
                             "<script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.8.0/chart.js'> </script>" +
                             "<script>" +
                             "function fetchTemp() {{location.href = '/temp';}}" +
-                            "setInterval(fetchTemp, 5000);" +
+                            "setInterval(fetchTemp, 10000);" + // 10 segundos para no sobrecargar la meadow
                             /*
                             "async function fetchStatus() {{try{{" +
                             "const response = await fetch('/temp');" +

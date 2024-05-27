@@ -25,6 +25,9 @@ namespace TemperatureWarriorCode {
         public static int remainTotalTime = 0; // In ms
         public static int remainRoundTime = 0; // In ms
         public static int currentRoundTime = 0; // In s
+
+        public static double lastTemperature = 0; // In s
+
         // MODE VARIABLES
         public static bool not_set_sensor_refresh = true;
 
@@ -32,7 +35,7 @@ namespace TemperatureWarriorCode {
         public static bool is_working = false;
         public static string temp_act = "0"; // In ºC
         public static int time_left; // in s
-        public static int time_in_range_temp = 0; //In ms. total de combate
+        public static int time_in_range_temp = 0; //In s. total de combate
 
         //SENSOR VARIABLES
         public static string[] csv_count = Array.Empty<string>();
