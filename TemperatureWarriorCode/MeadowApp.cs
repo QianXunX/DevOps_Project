@@ -319,6 +319,8 @@ namespace TemperatureWarriorCode
                 bool success;
                 string error_message = null;
 
+                total_time = 0;
+
                 //define ranges
                 for (int i = 0; i < Data.temp_min.Length; i++)
                 {
@@ -395,6 +397,8 @@ namespace TemperatureWarriorCode
                 //Initialization of timer
                 Thread t = new Thread(Timer);
                 Data.current_round = 1;
+                // Stopwatches to measure time left for all rounds
+                Stopwatch combatTimer = Stopwatch.StartNew();
                 t.Start();
     
                 for (int i = 0; i < temperatureRanges.Length; i++)
@@ -411,18 +415,22 @@ namespace TemperatureWarriorCode
 
                     // Setpoint calculation
                     double setPointWhenCurrAbove = temperatureRanges[i].MaxTemp;
-                    Data.temp_max_act = int.Parse(Data.temp_max[i]);
+                    Data.temp_max_act = double.Parse(Data.temp_max[i]);
                     double setPointWhenCurrBelow = temperatureRanges[i].MinTemp;
-                    Data.temp_min_act = int.Parse(Data.temp_min[i]);
+                    Data.temp_min_act = double.Parse(Data.temp_min[i]);
 
                     // set both setpoints to the same value being the middle of the range, above + below / 2
                     double setPoint = (setPointWhenCurrAbove + setPointWhenCurrBelow) / 2;
 
 
 
+
                     Stopwatch roundTimer = Stopwatch.StartNew(); // Temporizador para la ronda actual
+                    Data.currentRoundTime = temperatureRanges[i].RangeTimeInMilliseconds;
                     while (roundTimer.ElapsedMilliseconds < (temperatureRanges[i].RangeTimeInMilliseconds))  
                     {
+                        Data.remainRoundTime = (int)(temperatureRanges[i].RangeTimeInMilliseconds - roundTimer.ElapsedMilliseconds);
+                        Data.remainTotalTime = (int)(total_time*1000 - combatTimer.ElapsedMilliseconds);
                         if (Data.is_working == false)
                         {
 
@@ -479,6 +487,7 @@ namespace TemperatureWarriorCode
                         }
                             
                         stopwatch.Stop();
+
                         sleep_time = (int)stopwatch.ElapsedMilliseconds;
                             
                         if (sleep_time > Data.refresh)
@@ -499,6 +508,7 @@ namespace TemperatureWarriorCode
                     {
                         break;
                     }
+                    roundTimer.Stop();
 
                     // FINISH ROUND
 

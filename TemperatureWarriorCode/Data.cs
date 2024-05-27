@@ -15,14 +15,16 @@ namespace TemperatureWarriorCode {
         public static int refresh = 100; // In ms
         public static String[] round_time = { "30; 30; 30" }; // in s
 
-        public static int temp_max_act = 0; // In ºC
-        public static int temp_min_act = 0; // In ºC
+        public static double temp_max_act = 0; // In ºC
+        public static double temp_min_act = 0; // In ºC
         public static int current_round = 0;
         public static double current_round_time_in_range = 0; // In s
-        public static int number_of_instances = 0; // In s
+        public static int number_of_instances = 0;
         public static int total_time_s = 0; // In ms
         public static bool is_combat_finished = false;
-
+        public static int remainTotalTime = 0; // In ms
+        public static int remainRoundTime = 0; // In ms
+        public static int currentRoundTime = 0; // In s
         // MODE VARIABLES
         public static bool not_set_sensor_refresh = true;
 
@@ -30,7 +32,7 @@ namespace TemperatureWarriorCode {
         public static bool is_working = false;
         public static string temp_act = "0"; // In ºC
         public static int time_left; // in s
-        public static int time_in_range_temp = 0; //In ms.
+        public static int time_in_range_temp = 0; //In ms. total de combate
 
         //SENSOR VARIABLES
         public static string[] csv_count = Array.Empty<string>();

@@ -27,6 +27,7 @@ namespace TemperatureWarriorCode.Web {
         private static bool ready = false;
         private static readonly string pass = "pass";
         private static string message = "";
+        private static bool canRefresh = false;
 
 
         /// <summary>
@@ -351,16 +352,51 @@ namespace TemperatureWarriorCode.Web {
 
                     if (req.Url.AbsolutePath == "/status")
                     {
-                        var statusObject = new { Dataisworking = Data.time_left };
-                        string jsonResponse = JsonConvert.SerializeObject(statusObject);
+                        if (ready)
+                        {
+                            continue;
+                        }
+                        if (!Data.is_working && !ready && canRefresh)
+                        {
+                            message = "El combate ha terminado.";
+                            canRefresh = false;
+                        }
 
-                        byte[] statusData = Encoding.UTF8.GetBytes(jsonResponse);
-                        resp.ContentType = "application/json";
-                        resp.ContentEncoding = Encoding.UTF8;
-                        resp.ContentLength64 = statusData.LongLength;
-                        await resp.OutputStream.WriteAsync(statusData, 0, statusData.Length);
-                        resp.Close();
-                        continue; // Pasar a la siguiente iteración para manejar la próxima solicitud
+                        if (Data.is_working)
+                        {
+                            var statusObject = new
+                            {
+                                TempActual = $"{Data.temp_act}ºC",
+                                TiempoEnRango = $"{Math.Round((double) Data.time_in_range_temp / 1000, 1)}s",
+                                Rango = new
+                                {
+                                    Min = $"{Math.Round((double) Data.temp_min_act, 1)}ºC",
+                                    Max = $"{Math.Round((double) Data.temp_max_act, 1)}ºC"
+                                },
+                                TiempoFaltanteRonda = new
+                                {
+                                    TiempoFaltante = Math.Round((double) Data.remainRoundTime/1000, 1),
+                                    TotalRonda = Data.time_left
+                                },
+                                TiempoFaltanteCombate = new
+                                {
+                                    TiempoFaltante = Math.Round((double)Data.remainTotalTime, 1),
+                                    TotalCombate = Math.Round((double)Data.total_time_s/1000, 1)
+                                }
+                            };
+
+                            string jsonResponse = JsonConvert.SerializeObject(statusObject);
+                            byte[] statusData = Encoding.UTF8.GetBytes(jsonResponse);
+                            resp.ContentType = "application/json";
+                            resp.ContentEncoding = Encoding.UTF8;
+                            resp.ContentLength64 = statusData.LongLength;
+                            await resp.OutputStream.WriteAsync(statusData, 0, statusData.Length);
+                            resp.Close();
+
+
+                            continue; // Pasar a la siguiente iteración para manejar la próxima solicitud
+                        }
+
                     }
 
                     if (req.Url.AbsolutePath == "/setparams")
@@ -532,11 +568,8 @@ namespace TemperatureWarriorCode.Web {
                                 Thread.Sleep(100);
                             }
 
-                            // Thread to detect the combat termination
                             ready = false;
-
-
-
+                            canRefresh = true;
 
                         }
                         catch (Exception e)
@@ -547,7 +580,11 @@ namespace TemperatureWarriorCode.Web {
                     }
                     if (req.Url.AbsolutePath == "/temp")
                     {
-                        message = $"Temp Actual: {Data.temp_act}ºC; Rango ºC: [{Data.temp_min_act} ºC, {Data.temp_max_act}ºC]; Tiempo en Rango: {Data.time_in_range_temp}; Tiempo Faltante: {Data.time_left}";
+                        message = $"Temp Actual: {Data.temp_act}ºC; Rango ºC: [{Data.temp_min_act} ºC, {Data.temp_max_act}ºC];\n" +
+                        $"Tiempo Total en Rango / Total Combate: {Math.Round((double) Data.time_in_range_temp / 1000, 1)} / {Data.total_time_s};\n" +
+                        $"Tiempo Faltante Ronda / Total Ronda: {Math.Round((double) Data.remainRoundTime / 1000, 1)} / {Math.Round((double) Data.currentRoundTime / 1000, 1)};\n" +
+                        $"Tiempo Faltante Combate / Total Combate: {Math.Round((double) Data.remainTotalTime / 1000, 1)} / {Data.total_time_s}";
+;
                     }
 
                     if (req.Url.AbsolutePath == "/stop")
@@ -654,7 +691,7 @@ namespace TemperatureWarriorCode.Web {
                             "const data = await response.json();" +
                             "console.log(data);" +  
                             "console.log(document.getElementById('status'));" +
-                            "document.getElementById('status').innerText = \"Data is working: \" + data.Dataisworking;" +
+                            "document.getElementById('status').innerText = 'TempActual: ${{ data.TempActual}};'" +
                             "}}catch (error){{console.error('Error fetching status', error);}}}} setInterval(fetchStatus, 5000)" + // Polling cada 5 segundos
                             "</script>" +
             "</head>" +
